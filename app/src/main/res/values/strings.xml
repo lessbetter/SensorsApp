@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">SensorsApp</string>
+    <string name="start_button_name">Start Measuring</string>
+    <string name="saved_data_button_name">View Saved Measurements</string>
+    <string name="settings_button_name">Settings</string>
+</resources>
