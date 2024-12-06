@@ -1,5 +1,6 @@
-package com.example.sensorsapp.ui
+package com.example.sensorsapp.ui.screens
 
+import android.hardware.Sensor
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,21 +8,21 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.motionEventSpy
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.example.sensorsapp.SensorScreen
+import com.example.sensorsapp.ui.data.MeasurementViewModel
+import com.example.sensorsapp.ui.data.Sensors
 import kotlinx.coroutines.launch
 
 
@@ -29,9 +30,13 @@ import kotlinx.coroutines.launch
 fun SelectSensorsScreen(
     modifier: Modifier = Modifier,
     viewModel: MeasurementViewModel,
+    onNextButtonClicked: () -> Unit = {}
 ){
+
+    val sensorsUiState by viewModel.sensorsUiState.collectAsState()
     val scope = rememberCoroutineScope()
     var checked by remember { mutableStateOf(true) }
+    var gravityChecked = sensorsUiState.isGravityChecked
     ConstraintLayout(modifier = Modifier.fillMaxSize()) {
 
         val(listText,sensorsColumn,nextButton) = createRefs()
@@ -57,13 +62,28 @@ fun SelectSensorsScreen(
                     onCheckedChange = {checked = it}
                 )
             }
+            if(sensorsUiState.listOfSensors.contains(Sensors(Sensor.STRING_TYPE_GRAVITY))){
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    Text("Gravity sensor: ")
+                    val index = sensorsUiState.listOfSensors.indexOf(Sensors(Sensor.STRING_TYPE_GRAVITY))
+                    Checkbox(
+                        checked = gravityChecked,
+                        onCheckedChange = {
+                            viewModel.onCheckedUpdate(Sensor.STRING_TYPE_GRAVITY,it)
+                        }
+                    )
+                }
+            }
         }
 
         Button(
-            onClick = {
-                viewModel.startMeasuring()
-                scope.launch { viewModel.readData() }
-                      },
+            onClick = onNextButtonClicked,
+//            onClick = {
+////                viewModel.startMeasuring()
+////                scope.launch { viewModel.readData() }
+//                      },
             modifier = Modifier.constrainAs(nextButton){
                 bottom.linkTo(parent.bottom, margin = 40.dp)
                 end.linkTo(parent.end, margin = 30.dp)

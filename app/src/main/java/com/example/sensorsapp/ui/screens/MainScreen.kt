@@ -1,4 +1,4 @@
-package com.example.sensorsapp.ui
+package com.example.sensorsapp.ui.screens
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.sensorsapp.ui.data.MeasurementViewModel
 
 
 //enum class SensorScreen(){

@@ -1,14 +1,11 @@
 package com.example.sensorsapp.ui.sensors
 
-import android.app.Activity
 import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.hardware.SensorManager.SENSOR_DELAY_NORMAL
-import android.util.Log
-import com.example.sensorsapp.ui.MeasurementViewModel
 
 
 class MySensorClass(

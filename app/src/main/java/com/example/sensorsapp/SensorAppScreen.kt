@@ -10,9 +10,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.sensorsapp.ui.MainScreen
-import com.example.sensorsapp.ui.MeasurementViewModel
-import com.example.sensorsapp.ui.SelectSensorsScreen
+import com.example.sensorsapp.ui.screens.MainScreen
+import com.example.sensorsapp.ui.data.MeasurementViewModel
+import com.example.sensorsapp.ui.screens.MeasurementScreen
+import com.example.sensorsapp.ui.screens.SelectSensorsScreen
 
 enum class SensorScreen(){
     Start,
@@ -38,7 +39,7 @@ fun SensorApp(
         ){
             composable(route = SensorScreen.Start.name) {
                 MainScreen(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = modifier.fillMaxSize(),
                     onNextButtonClicked = {
                         viewModel.getSensors(ctx)
                         navController.navigate(SensorScreen.Sensors.name)
@@ -47,8 +48,17 @@ fun SensorApp(
             }
             composable(route = SensorScreen.Sensors.name) {
                 SelectSensorsScreen(
-                    modifier = Modifier.fillMaxSize(),
-                    viewModel
+                    modifier = modifier.fillMaxSize(),
+                    viewModel,
+                    onNextButtonClicked = {
+                        navController.navigate(SensorScreen.Measurement.name)
+                    }
+                )
+            }
+            composable(route = SensorScreen.Measurement.name){
+                MeasurementScreen(
+                    modifier = modifier.fillMaxSize(),
+                    viewModel,
                 )
             }
 
