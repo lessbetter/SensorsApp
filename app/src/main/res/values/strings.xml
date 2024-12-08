@@ -3,4 +3,8 @@
     <string name="start_button_name">Start Measuring</string>
     <string name="saved_data_button_name">View Saved Measurements</string>
     <string name="settings_button_name">Settings</string>
+    <string name="start">Start</string>
+    <string name="pause">Pause</string>
+    <string name="stop">Stop</string>
+    <string name="next">Next</string>
 </resources>

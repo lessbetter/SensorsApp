@@ -37,6 +37,9 @@ fun SelectSensorsScreen(
     val scope = rememberCoroutineScope()
     var checked by remember { mutableStateOf(true) }
     var gravityChecked = sensorsUiState.isGravityChecked
+    var magneticChecked = sensorsUiState.isMagneticChecked
+    var gyroscopeChecked = sensorsUiState.isGyroscopeChecked
+    var accelerometerChecked = sensorsUiState.isAccelerometerChecked
     ConstraintLayout(modifier = Modifier.fillMaxSize()) {
 
         val(listText,sensorsColumn,nextButton) = createRefs()
@@ -72,6 +75,34 @@ fun SelectSensorsScreen(
                         checked = gravityChecked,
                         onCheckedChange = {
                             viewModel.onCheckedUpdate(Sensor.STRING_TYPE_GRAVITY,it)
+                        }
+                    )
+                }
+            }
+            if(sensorsUiState.listOfSensors.contains(Sensors(Sensor.STRING_TYPE_MAGNETIC_FIELD))){
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    Text("Magnetic field sensor: ")
+                    val index = sensorsUiState.listOfSensors.indexOf(Sensors(Sensor.STRING_TYPE_MAGNETIC_FIELD))
+                    Checkbox(
+                        checked = magneticChecked,
+                        onCheckedChange = {
+                            viewModel.onCheckedUpdate(Sensor.STRING_TYPE_MAGNETIC_FIELD,it)
+                        }
+                    )
+                }
+            }
+            if(sensorsUiState.listOfSensors.contains(Sensors(Sensor.STRING_TYPE_GYROSCOPE))){
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    Text("Gyroscope sensor: ")
+                    val index = sensorsUiState.listOfSensors.indexOf(Sensors(Sensor.STRING_TYPE_GYROSCOPE))
+                    Checkbox(
+                        checked = gyroscopeChecked,
+                        onCheckedChange = {
+                            viewModel.onCheckedUpdate(Sensor.STRING_TYPE_GYROSCOPE,it)
                         }
                     )
                 }

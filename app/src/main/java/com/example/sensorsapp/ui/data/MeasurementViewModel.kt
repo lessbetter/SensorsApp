@@ -7,7 +7,9 @@ import android.content.Context.SENSOR_SERVICE
 import android.hardware.SensorManager
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.sensorsapp.ui.MeasurementUiState
+import com.example.sensorsapp.ui.ResultUiState
 import com.example.sensorsapp.ui.SensorsUiState
 import com.example.sensorsapp.ui.sensors.MySensorClass
 import kotlinx.coroutines.delay
@@ -15,12 +17,23 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
+import kotlin.time.TimeSource
+import kotlin.time.toDuration
 
 class MeasurementViewModel : ViewModel() {
+
     private val _measurementUiState = MutableStateFlow(MeasurementUiState())
     val measurementUiState: StateFlow<MeasurementUiState> = _measurementUiState.asStateFlow()
-    private val _sensorsUiState = MutableStateFlow(SensorsUiState(isChecked = { setListChecked(it) }))
+
+    private val _resultUiState = MutableStateFlow(ResultUiState())
+    val resultUiState: StateFlow<ResultUiState> = _resultUiState.asStateFlow()
+
+    private val _sensorsUiState = MutableStateFlow(SensorsUiState())
     val sensorsUiState: StateFlow<SensorsUiState> = _sensorsUiState.asStateFlow()
+
     private lateinit var sensorManager: SensorManager
 
     private lateinit var sensorGyroscope: MySensorClass
@@ -37,6 +50,8 @@ class MeasurementViewModel : ViewModel() {
 
     var listOfSensors: MutableList<Sensors> = mutableListOf()
 
+    var selectedSensors: MutableList<String> = mutableListOf()
+
 
     private var mSensor: Sensor? = null
 
@@ -44,31 +59,65 @@ class MeasurementViewModel : ViewModel() {
 
     private var isRunning: Boolean = false
 
+    private var hasStarted: Boolean = false
+
+    val timeSource = TimeSource.Monotonic
+
+    var timeAdjustment: TimeSource.Monotonic.ValueTimeMark = timeSource.markNow()
+
+    var stopMark: TimeSource.Monotonic.ValueTimeMark = timeSource.markNow()
+
+    var pauseDuration: Duration = timeSource.markNow().minus(timeAdjustment)
+
+
+    var hasRestarted = false
+
 
 
 
     fun startMeasuring(){
-        if(::sensorManager.isInitialized && mSensor!=null){
-            if(isRunning==false){
+        if(::sensorManager.isInitialized ){
+            if(!isRunning){
 
+                if(!hasStarted){
+                    hasStarted = true
+                    timeAdjustment = timeSource.markNow()
+                }else{
+                    hasRestarted = true
+                    pauseDuration += timeSource.markNow().minus(stopMark)
+                }
 
-                sensorGyroscope.startListening()
-                sensorGravity.startListening()
-                sensorMagnetic.startListening()
+                _measurementUiState.update { currentState ->
+                    currentState.copy(
+                        isRunning = true
+                    )
+                }
+
+                if(selectedSensors.contains(Sensor.STRING_TYPE_GYROSCOPE))sensorGyroscope.startListening()
+                if(selectedSensors.contains(Sensor.STRING_TYPE_GRAVITY))sensorGravity.startListening()
+                if(selectedSensors.contains(Sensor.STRING_TYPE_MAGNETIC_FIELD))sensorMagnetic.startListening()
 
                 isRunning=true
+
+                viewModelScope.launch { readData() }
             }
-            else if (isRunning==true){
+            else {
+                stopMark = timeSource.markNow()
+                _measurementUiState.update { currentState ->
+                    currentState.copy(
+                        isRunning = false
+                    )
+                }
                 isRunning=false
-                //sensorManager.unregisterListener(testListener,mSensor)
+
                 for(data in collectedGravityData){
-                    Log.d("Collected Gravity Data","val: ${data.v0} at: ${data.timestamp}")
+                    Log.d("Collected Gravity Data","val: ${data.v0} at: ${data.timeMark}")
                 }
                 for(data in collectedMagneticData){
-                    Log.d("Collected Magnetic Data","val: ${data.v0} at: ${data.timestamp}")
+                    Log.d("Collected Magnetic Data","val: ${data.v0} at: ${data.timeMark}")
                 }
                 for(data in collectedGyroscopeData){
-                    Log.d("Collected Gyroscope Data","val: ${data.v0} at: ${data.timestamp}")
+                    Log.d("Collected Gyroscope Data","val: ${data.v0} at: ${data.timeMark}")
                 }
                 sensorGyroscope.stopListening()
                 sensorGravity.stopListening()
@@ -79,33 +128,62 @@ class MeasurementViewModel : ViewModel() {
             return
     }
 
+    fun stopRunning(){
+        if(hasStarted==true){
+            hasStarted = false
+            hasRestarted = false
+            pauseDuration = 0.toDuration(DurationUnit.NANOSECONDS)
+            Log.d("Stopped measuring","TRUE")
+            isRunning = false
+            _measurementUiState.update { currentState ->
+                currentState.copy(
+                    isRunning = false
+                )
+            }
+            for(data in collectedGravityData){
+                Log.d("Collected Gravity Data","val: ${data.v0} at: ${data.timeMark}")
+            }
+            for(data in collectedMagneticData){
+                Log.d("Collected Magnetic Data","val: ${data.v0} at: ${data.timeMark}")
+            }
+            for(data in collectedGyroscopeData){
+                Log.d("Collected Gyroscope Data","val: ${data.v0} at: ${data.timeMark}")
+            }
+            sensorGyroscope.stopListening()
+            sensorGravity.stopListening()
+            sensorMagnetic.stopListening()
+            collectedGravityData.clear()
+            collectedMagneticData.clear()
+            collectedGyroscopeData.clear()
+        }
+    }
+
     suspend fun readData(){
         while(isRunning){
-            delay(500)
 
-            collectedGravityData.add(DataFromSensor(gravityData.timestamp,gravityData.v0))
-            collectedMagneticData.add(DataFromSensor(magneticData.timestamp,magneticData.v0))
-            collectedGyroscopeData.add(DataFromSensor(gyroscopeData.timestamp,gyroscopeData.v0))
+            if(timeSource!=null){
+                var timeMark = timeSource.markNow().minus(timeAdjustment)
+                if(hasRestarted){
+                    timeMark -= pauseDuration
+                }
+                collectedGravityData.add(DataFromSensor(timeMark,gravityData.timestamp,gravityData.v0))
+                collectedMagneticData.add(DataFromSensor(timeMark,magneticData.timestamp,magneticData.v0))
+                collectedGyroscopeData.add(DataFromSensor(timeMark,gyroscopeData.timestamp,gyroscopeData.v0))
+            }
+
+
             Log.d("Collecting Test","collected")
+            delay(500)
         }
     }
 
 
     fun getSensors(ctx: Context){
         sensorManager = ctx.getSystemService(SENSOR_SERVICE) as SensorManager
-        val deviceSensors: MutableList<Sensor> = mutableListOf()
-
-
 
 
         if(sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)!=null){
-            //sensorsUiState.value.listOfSensors.add(Sensors(Sensor.STRING_TYPE_GRAVITY,false))
-            _sensorsUiState.update { currentState ->
-                currentState.copy(
-                    listOfSensors = updateSensorsList(currentState.listOfSensors,Sensors(Sensor.STRING_TYPE_GRAVITY,false))
-                )
-            }
-            //mSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+            mSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
             listOfSensors.add(Sensors(Sensor.STRING_TYPE_GRAVITY,false))
 
             sensorGravity = MySensorClass(ctx,Sensor.TYPE_GRAVITY,{values,timestamp ->
@@ -120,62 +198,69 @@ class MeasurementViewModel : ViewModel() {
                 gyroscopeData.v0 = values[0]
                 gyroscopeData.timestamp = timestamp
             })
-            deviceSensors.add(sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)!!)
         }
         if(sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)!=null){
             listOfSensors.add(Sensors(Sensor.STRING_TYPE_ACCELEROMETER,false))
 
-            deviceSensors.add(sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)!!)
         }
         if(sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)!=null){
             listOfSensors.add(Sensors(Sensor.STRING_TYPE_MAGNETIC_FIELD,false))
-
-            deviceSensors.add(sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)!!)
 
             sensorMagnetic = MySensorClass(ctx,Sensor.TYPE_MAGNETIC_FIELD,{values, timestamp ->
                 magneticData.v0 = values[0]
                 magneticData.timestamp = timestamp
             })
         }
+
+        _sensorsUiState.update { currentState ->
+            currentState.copy(
+                listOfSensors = listOfSensors
+            )
+        }
     }
 
-    fun resetData(){
-        isRunning = false
-        collectedGravityData.clear()
-        collectedMagneticData.clear()
-        collectedGyroscopeData.clear()
-    }
 
     fun onCheckedUpdate(name: String,selected: Boolean){
-        var tempList = sensorsUiState.value.listOfSensors
+//        var tempList = sensorsUiState.value.listOfSensors
         when(name){
             Sensor.STRING_TYPE_GRAVITY -> _sensorsUiState.update { currentState -> currentState.copy(isGravityChecked = selected) }
+            Sensor.STRING_TYPE_MAGNETIC_FIELD -> _sensorsUiState.update { it.copy(isMagneticChecked = selected) }
+            Sensor.STRING_TYPE_GYROSCOPE -> _sensorsUiState.update { it.copy(isGyroscopeChecked = selected) }
         }
-//        for (sensor in tempList){
-//            if(sensor.sensorName==name){
-//                sensor.isSelected = selected
-//                _sensorsUiState.update { currentState ->
-//                    currentState.copy (
-//                        listOfSensors = tempList
-//                    )
-//                }
-//                break
-//            }
-//        }
     }
 
-    fun setListChecked(name: String): Boolean{
-        for (sensor in sensorsUiState.value.listOfSensors){
-            if(sensor.sensorName==name){
-                return sensor.isSelected
-            }
-        }
-        return false
+    fun setLocalList(){
+        //listOfSensors = mutableListOf()
+        if(sensorsUiState.value.isGravityChecked) selectedSensors.add(Sensor.STRING_TYPE_GRAVITY)
+        if(sensorsUiState.value.isGyroscopeChecked) selectedSensors.add(Sensor.STRING_TYPE_GYROSCOPE)
+        if(sensorsUiState.value.isMagneticChecked) selectedSensors.add(Sensor.STRING_TYPE_MAGNETIC_FIELD)
+        if(sensorsUiState.value.isAccelerometerChecked) selectedSensors.add(Sensor.STRING_TYPE_ACCELEROMETER)
+
     }
 
-    fun updateSensorsList(sensors: MutableList<Sensors>, element: Sensors): MutableList<Sensors>{
-        sensors.add(element)
-        return sensors
+//    fun updateSensorsList(sensors: MutableList<Sensors>, element: Sensors): MutableList<Sensors>{
+//        sensors.add(element)
+//        return sensors
+//    }
+
+    fun toAxis(){
+        val valList: MutableList<Float> = mutableListOf()
+        val timeList: MutableList<Long> = mutableListOf()
+        val gyroData: MutableList<Float> = mutableListOf()
+        for (value in collectedGravityData){
+            valList.add(value.v0)
+            timeList.add(value.timeMark!!.inWholeSeconds)
+        }
+        for(value in collectedGyroscopeData){
+            gyroData.add(value.v0)
+        }
+        _resultUiState.update { currentState ->
+            currentState.copy(
+                yAxis = valList,
+                xAxis = timeList,
+                gyroAxis = gyroData,
+            )
+        }
     }
 
 }

@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.sensorsapp"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.sensorsapp"
@@ -37,7 +37,12 @@ android {
     buildFeatures {
         compose = true
     }
+
 }
+
+val vicoVersion = "2.0.0-beta.3"
+
+
 
 dependencies {
 
@@ -61,4 +66,9 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    implementation(libs.vico.compose)
+    implementation(libs.vico.compose.m2)
+    implementation(libs.vico.compose.m3)
+    implementation(libs.vico.core)
+    implementation(libs.vico.views)
 }
