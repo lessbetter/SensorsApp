@@ -24,6 +24,8 @@ import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.core.common.LegendItem
 import com.patrykandpatrick.vico.core.common.component.TextComponent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun ResultScreen(
@@ -36,12 +38,15 @@ fun ResultScreen(
     val sensorsList = viewModel.selectedSensors
 
     LaunchedEffect(Unit){
-        modelProducer.runTransaction {
-            lineSeries{ series(resultUiState.xAxis,resultUiState.yAxis) }
-            if(sensorsList.contains(Sensor.STRING_TYPE_GYROSCOPE)){
-                lineSeries { series(resultUiState.gyroAxis,resultUiState.yAxis) }
+        withContext(Dispatchers.Default){
+            modelProducer.runTransaction {
+                lineSeries{ series(resultUiState.timeAxis,resultUiState.yAxis) }
+                if(sensorsList.contains(Sensor.STRING_TYPE_GYROSCOPE)){
+                    lineSeries { series(resultUiState.gyroAxis,resultUiState.yAxis) }
+                }
             }
         }
+
     }
     CartesianChartHost(
         rememberCartesianChart(

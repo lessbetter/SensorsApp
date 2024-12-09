@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.math.RoundingMode
+import kotlin.math.roundToInt
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.TimeSource
@@ -52,6 +54,8 @@ class MeasurementViewModel : ViewModel() {
 
     var selectedSensors: MutableList<String> = mutableListOf()
 
+    val myStopWatch: StopWatch = StopWatch(this)
+
 
     private var mSensor: Sensor? = null
 
@@ -82,10 +86,12 @@ class MeasurementViewModel : ViewModel() {
                 if(!hasStarted){
                     hasStarted = true
                     timeAdjustment = timeSource.markNow()
+                    resetData()
                 }else{
                     hasRestarted = true
                     pauseDuration += timeSource.markNow().minus(stopMark)
                 }
+                myStopWatch.start()
 
                 _measurementUiState.update { currentState ->
                     currentState.copy(
@@ -109,6 +115,8 @@ class MeasurementViewModel : ViewModel() {
                     )
                 }
                 isRunning=false
+
+                myStopWatch.pause()
 
                 for(data in collectedGravityData){
                     Log.d("Collected Gravity Data","val: ${data.v0} at: ${data.timeMark}")
@@ -140,6 +148,7 @@ class MeasurementViewModel : ViewModel() {
                     isRunning = false
                 )
             }
+            myStopWatch.reset()
             for(data in collectedGravityData){
                 Log.d("Collected Gravity Data","val: ${data.v0} at: ${data.timeMark}")
             }
@@ -186,17 +195,17 @@ class MeasurementViewModel : ViewModel() {
             mSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
             listOfSensors.add(Sensors(Sensor.STRING_TYPE_GRAVITY,false))
 
-            sensorGravity = MySensorClass(ctx,Sensor.TYPE_GRAVITY,{values,timestamp ->
+            sensorGravity = MySensorClass(ctx,Sensor.TYPE_GRAVITY,{values ->
                 gravityData.v0 = values[0]
-                gravityData.timestamp = timestamp
+                //gravityData.timestamp = timestamp
             })
         }
         if(sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)!=null){
             listOfSensors.add(Sensors(Sensor.STRING_TYPE_GYROSCOPE,false))
 
-            sensorGyroscope = MySensorClass(ctx,Sensor.TYPE_GYROSCOPE, { values, timestamp ->
+            sensorGyroscope = MySensorClass(ctx,Sensor.TYPE_GYROSCOPE, { values->
                 gyroscopeData.v0 = values[0]
-                gyroscopeData.timestamp = timestamp
+                //gyroscopeData.timestamp = timestamp
             })
         }
         if(sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)!=null){
@@ -206,9 +215,9 @@ class MeasurementViewModel : ViewModel() {
         if(sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)!=null){
             listOfSensors.add(Sensors(Sensor.STRING_TYPE_MAGNETIC_FIELD,false))
 
-            sensorMagnetic = MySensorClass(ctx,Sensor.TYPE_MAGNETIC_FIELD,{values, timestamp ->
+            sensorMagnetic = MySensorClass(ctx,Sensor.TYPE_MAGNETIC_FIELD,{values ->
                 magneticData.v0 = values[0]
-                magneticData.timestamp = timestamp
+                //magneticData.timestamp = timestamp
             })
         }
 
@@ -245,11 +254,11 @@ class MeasurementViewModel : ViewModel() {
 
     fun toAxis(){
         val valList: MutableList<Float> = mutableListOf()
-        val timeList: MutableList<Long> = mutableListOf()
+        val timeList: MutableList<Float> = mutableListOf()
         val gyroData: MutableList<Float> = mutableListOf()
         for (value in collectedGravityData){
             valList.add(value.v0)
-            timeList.add(value.timeMark!!.inWholeSeconds)
+            timeList.add(value.timeMark!!.toDouble(DurationUnit.SECONDS).toBigDecimal().setScale(4,RoundingMode.UP).toFloat())
         }
         for(value in collectedGyroscopeData){
             gyroData.add(value.v0)
@@ -257,9 +266,25 @@ class MeasurementViewModel : ViewModel() {
         _resultUiState.update { currentState ->
             currentState.copy(
                 yAxis = valList,
-                xAxis = timeList,
+                timeAxis = timeList,
                 gyroAxis = gyroData,
             )
+        }
+    }
+
+    fun resetData(){
+        _resultUiState.update { currentState ->
+            currentState.copy(
+                yAxis = mutableListOf(),
+                timeAxis = mutableListOf(),
+                gyroAxis = mutableListOf()
+            )
+        }
+    }
+
+    fun updateTimeText(formattedTime: String){
+        _measurementUiState.update { currentState ->
+            currentState.copy(formattedTime = formattedTime)
         }
     }
 

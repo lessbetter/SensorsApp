@@ -12,7 +12,7 @@ class MySensorClass(
     private val context: Context,
 //    private val sensorFeature: String,
     private val sensorType: Int,
-    private val testFun: (List<Float>,Long) -> Unit
+    private val sendData: (List<Float>) -> Unit
 ) : SensorEventListener {
     private lateinit var mSensorManager: SensorManager
     private var mSensor: Sensor? = null
@@ -28,14 +28,16 @@ class MySensorClass(
     }
 
     fun stopListening() {
-        mSensorManager.unregisterListener(this)
+        if(::mSensorManager.isInitialized && mSensor != null){
+            mSensorManager.unregisterListener(this)
+        }
     }
 
     override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) = Unit
 
     override fun onSensorChanged(event: SensorEvent) {
         //val value = event.values[0]
-        testFun(event.values.toList(),event.timestamp)
+        sendData(event.values.toList())
 
     }
 }

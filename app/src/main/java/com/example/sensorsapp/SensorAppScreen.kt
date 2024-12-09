@@ -2,6 +2,7 @@ package com.example.sensorsapp
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -12,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.sensorsapp.ui.screens.MainScreen
 import com.example.sensorsapp.ui.data.MeasurementViewModel
+import com.example.sensorsapp.ui.data.StopWatch
 import com.example.sensorsapp.ui.screens.MeasurementScreen
 import com.example.sensorsapp.ui.screens.ResultScreen
 import com.example.sensorsapp.ui.screens.SelectSensorsScreen
@@ -29,9 +31,10 @@ enum class SensorScreen(){
 fun SensorApp(
     modifier: Modifier = Modifier,
     viewModel: MeasurementViewModel = viewModel(),
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
 ){
     val ctx = (LocalContext.current)
+    //val stopWatch = remember{ StopWatch(viewModel)}
     ConstraintLayout(modifier = modifier.fillMaxSize()) {
         NavHost(
             navController = navController,
@@ -64,7 +67,8 @@ fun SensorApp(
                     onNextButtonClicked = {
                         viewModel.toAxis()
                         navController.navigate(SensorScreen.Result.name)
-                    }
+                    },
+
                 )
             }
             composable(route = SensorScreen.Result.name) {
