@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -14,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.unit.dp
 import com.example.sensorsapp.ui.data.MeasurementViewModel
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
@@ -68,12 +70,12 @@ fun ResultScreen(
             CartesianChartHost(
                 rememberCartesianChart(
                     rememberLineCartesianLayer(
-//                        lineProvider =
-//                            LineCartesianLayer.LineProvider.series(
-//                                LineCartesianLayer.rememberLine(fill =fill(Color.Red)),
-//                                rememberLineComponent(),
-//                                rememberLineComponent()
-//                            )
+                        lineProvider =
+                            LineCartesianLayer.LineProvider.series(
+                                LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Red))),
+                                LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Blue))),
+                                LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Green))),
+                            )
                     ),
                     startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Gravity"),
                     bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
@@ -81,7 +83,8 @@ fun ResultScreen(
                 ),
                 gravModel,
                 scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
-                zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0))
+                zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0)),
+                modifier = Modifier.padding(top = 40.dp)
 
                 )
         }
