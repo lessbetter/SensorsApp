@@ -12,6 +12,8 @@ import com.example.sensorsapp.ui.MeasurementUiState
 import com.example.sensorsapp.ui.ResultUiState
 import com.example.sensorsapp.ui.SensorsUiState
 import com.example.sensorsapp.ui.sensors.MySensorClass
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +21,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.RoundingMode
-import kotlin.math.roundToInt
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.TimeSource
@@ -46,7 +47,7 @@ class MeasurementViewModel : ViewModel() {
     private var magneticData: DataFromSensor = DataFromSensor()
     private var gyroscopeData: DataFromSensor = DataFromSensor()
 
-    private var collectedGravityData: MutableList<DataFromSensor> = mutableListOf()
+    var collectedGravityData: MutableList<DataFromSensor> = mutableListOf()
     private var collectedMagneticData: MutableList<DataFromSensor> = mutableListOf()
     private var collectedGyroscopeData: MutableList<DataFromSensor> = mutableListOf()
 
@@ -55,6 +56,10 @@ class MeasurementViewModel : ViewModel() {
     var selectedSensors: MutableList<String> = mutableListOf()
 
     val myStopWatch: StopWatch = StopWatch(this)
+
+    var gravChartModel: CartesianChartModelProducer = CartesianChartModelProducer()
+    var magneChartProducer: CartesianChartModelProducer = CartesianChartModelProducer()
+    var gyroChartProducer: CartesianChartModelProducer = CartesianChartModelProducer()
 
 
     private var mSensor: Sensor? = null
@@ -253,29 +258,48 @@ class MeasurementViewModel : ViewModel() {
 //    }
 
     fun toAxis(){
-        val valList: MutableList<Float> = mutableListOf()
+        val gravData: MutableList<Float> = mutableListOf()
         val timeList: MutableList<Float> = mutableListOf()
         val gyroData: MutableList<Float> = mutableListOf()
         for (value in collectedGravityData){
-            valList.add(value.v0)
-            timeList.add(value.timeMark!!.toDouble(DurationUnit.SECONDS).toBigDecimal().setScale(4,RoundingMode.UP).toFloat())
+            val v0Rounded = value.v0.toBigDecimal().setScale(3,RoundingMode.UP).toFloat()
+            gravData.add(v0Rounded)
+            val rounded = value.timeMark!!.toDouble(DurationUnit.SECONDS).toBigDecimal().setScale(3,RoundingMode.UP).toFloat()
+            timeList.add(rounded)
         }
         for(value in collectedGyroscopeData){
-            gyroData.add(value.v0)
+            gyroData.add(value.v0.toBigDecimal().setScale(3,RoundingMode.UP).toFloat())
         }
         _resultUiState.update { currentState ->
             currentState.copy(
-                yAxis = valList,
+                gravAxis = gravData,
                 timeAxis = timeList,
                 gyroAxis = gyroData,
             )
+        }
+        viewModelScope.launch {
+            if(selectedSensors.contains(Sensor.STRING_TYPE_GRAVITY)){
+                gravChartModel.runTransaction {
+                    lineSeries{ series(x=timeList.map{it},y=gravData.map{it}) }
+                }
+            }
+            if(selectedSensors.contains(Sensor.STRING_TYPE_MAGNETIC_FIELD)){
+                magneChartProducer.runTransaction {
+                    //lineSeries{ series(resultUiState.value.timeAxis,resultUiState.value.magnAxis) }
+                }
+            }
+            if(selectedSensors.contains(Sensor.STRING_TYPE_GYROSCOPE)){
+                gyroChartProducer.runTransaction {
+                    lineSeries{ series(timeList,gyroData) }
+                }
+            }
         }
     }
 
     fun resetData(){
         _resultUiState.update { currentState ->
             currentState.copy(
-                yAxis = mutableListOf(),
+                gravAxis = mutableListOf(),
                 timeAxis = mutableListOf(),
                 gyroAxis = mutableListOf()
             )
