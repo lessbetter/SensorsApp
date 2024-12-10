@@ -38,6 +38,5 @@ class MySensorClass(
     override fun onSensorChanged(event: SensorEvent) {
         //val value = event.values[0]
         sendData(event.values.toList())
-
     }
 }

@@ -14,12 +14,14 @@ import com.example.sensorsapp.ui.SensorsUiState
 import com.example.sensorsapp.ui.sensors.MySensorClass
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.math.RoundingMode
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
@@ -81,22 +83,50 @@ class MeasurementViewModel : ViewModel() {
 
     var hasRestarted = false
 
+    fun getSensors(ctx: Context){
+        sensorManager = ctx.getSystemService(SENSOR_SERVICE) as SensorManager
 
+
+        if(sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)!=null){
+            mSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+            listOfSensors.add(Sensors(Sensor.STRING_TYPE_GRAVITY,false))
+
+            sensorGravity = MySensorClass(ctx,Sensor.TYPE_GRAVITY) { values ->
+                gravityData.values = values
+//                gravityData.v0 = values[0]
+//                gravityData.v1 = values[1]
+            }
+        }
+        if(sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)!=null){
+            listOfSensors.add(Sensors(Sensor.STRING_TYPE_GYROSCOPE,false))
+
+            sensorGyroscope = MySensorClass(ctx,Sensor.TYPE_GYROSCOPE, { values->
+                gyroscopeData.values = values
+            })
+        }
+        if(sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)!=null){
+            listOfSensors.add(Sensors(Sensor.STRING_TYPE_ACCELEROMETER,false))
+
+        }
+        if(sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)!=null){
+            listOfSensors.add(Sensors(Sensor.STRING_TYPE_MAGNETIC_FIELD,false))
+
+            sensorMagnetic = MySensorClass(ctx,Sensor.TYPE_MAGNETIC_FIELD,{values ->
+                magneticData.values = values
+            })
+        }
+
+        _sensorsUiState.update { currentState ->
+            currentState.copy(
+                listOfSensors = listOfSensors
+            )
+        }
+    }
 
 
     fun startMeasuring(){
         if(::sensorManager.isInitialized ){
             if(!isRunning){
-
-                if(!hasStarted){
-                    hasStarted = true
-                    timeAdjustment = timeSource.markNow()
-                    resetData()
-                }else{
-                    hasRestarted = true
-                    pauseDuration += timeSource.markNow().minus(stopMark)
-                }
-                myStopWatch.start()
 
                 _measurementUiState.update { currentState ->
                     currentState.copy(
@@ -110,7 +140,38 @@ class MeasurementViewModel : ViewModel() {
 
                 isRunning=true
 
-                viewModelScope.launch { readData() }
+                viewModelScope.launch {
+                    if(selectedSensors.contains(Sensor.STRING_TYPE_GYROSCOPE)){
+                        sensorGyroscope.startListening()
+                        while (gyroscopeData.values==null){
+                            delay(1)
+                        }
+                    }
+
+                    if(selectedSensors.contains(Sensor.STRING_TYPE_GRAVITY)) {
+                        sensorGravity.startListening()
+                        while (gravityData.values==null){
+                            delay(1)
+                        }
+                    }
+                    if(selectedSensors.contains(Sensor.STRING_TYPE_MAGNETIC_FIELD)) {
+                        sensorMagnetic.startListening()
+                        while (magneticData.values==null){
+                            delay(1)
+                        }
+                    }
+                    if(!hasStarted){
+                        hasStarted = true
+                        resetData()
+                        timeAdjustment = timeSource.markNow()
+                    }else{
+                        hasRestarted = true
+                        pauseDuration += timeSource.markNow().minus(stopMark)
+                    }
+                    readData()
+
+                }
+                myStopWatch.start()
             }
             else {
                 stopMark = timeSource.markNow()
@@ -123,15 +184,15 @@ class MeasurementViewModel : ViewModel() {
 
                 myStopWatch.pause()
 
-                for(data in collectedGravityData){
-                    Log.d("Collected Gravity Data","val: ${data.v0} at: ${data.timeMark}")
-                }
-                for(data in collectedMagneticData){
-                    Log.d("Collected Magnetic Data","val: ${data.v0} at: ${data.timeMark}")
-                }
-                for(data in collectedGyroscopeData){
-                    Log.d("Collected Gyroscope Data","val: ${data.v0} at: ${data.timeMark}")
-                }
+//                for(data in collectedGravityData){
+//                    Log.d("Collected Gravity Data","val: ${data.v0} at: ${data.timeMark}")
+//                }
+//                for(data in collectedMagneticData){
+//                    Log.d("Collected Magnetic Data","val: ${data.v0} at: ${data.timeMark}")
+//                }
+//                for(data in collectedGyroscopeData){
+//                    Log.d("Collected Gyroscope Data","val: ${data.v0} at: ${data.timeMark}")
+//                }
                 sensorGyroscope.stopListening()
                 sensorGravity.stopListening()
                 sensorMagnetic.stopListening()
@@ -154,15 +215,15 @@ class MeasurementViewModel : ViewModel() {
                 )
             }
             myStopWatch.reset()
-            for(data in collectedGravityData){
-                Log.d("Collected Gravity Data","val: ${data.v0} at: ${data.timeMark}")
-            }
-            for(data in collectedMagneticData){
-                Log.d("Collected Magnetic Data","val: ${data.v0} at: ${data.timeMark}")
-            }
-            for(data in collectedGyroscopeData){
-                Log.d("Collected Gyroscope Data","val: ${data.v0} at: ${data.timeMark}")
-            }
+//            for(data in collectedGravityData){
+//                Log.d("Collected Gravity Data","val: ${data.v0} at: ${data.timeMark}")
+//            }
+//            for(data in collectedMagneticData){
+//                Log.d("Collected Magnetic Data","val: ${data.v0} at: ${data.timeMark}")
+//            }
+//            for(data in collectedGyroscopeData){
+//                Log.d("Collected Gyroscope Data","val: ${data.v0} at: ${data.timeMark}")
+//            }
             sensorGyroscope.stopListening()
             sensorGravity.stopListening()
             sensorMagnetic.stopListening()
@@ -173,6 +234,7 @@ class MeasurementViewModel : ViewModel() {
     }
 
     suspend fun readData(){
+
         while(isRunning){
 
             if(timeSource!=null){
@@ -180,58 +242,19 @@ class MeasurementViewModel : ViewModel() {
                 if(hasRestarted){
                     timeMark -= pauseDuration
                 }
-                collectedGravityData.add(DataFromSensor(timeMark,gravityData.timestamp,gravityData.v0))
-                collectedMagneticData.add(DataFromSensor(timeMark,magneticData.timestamp,magneticData.v0))
-                collectedGyroscopeData.add(DataFromSensor(timeMark,gyroscopeData.timestamp,gyroscopeData.v0))
+                collectedGravityData.add(DataFromSensor(timeMark,gravityData.timestamp,gravityData.values))
+                collectedMagneticData.add(DataFromSensor(timeMark,magneticData.timestamp,magneticData.values))
+                collectedGyroscopeData.add(DataFromSensor(timeMark,gyroscopeData.timestamp,gyroscopeData.values))
             }
 
 
-            Log.d("Collecting Test","collected")
+            //Log.d("Collecting Test","collected")
             delay(500)
         }
     }
 
 
-    fun getSensors(ctx: Context){
-        sensorManager = ctx.getSystemService(SENSOR_SERVICE) as SensorManager
 
-
-        if(sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)!=null){
-            mSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
-            listOfSensors.add(Sensors(Sensor.STRING_TYPE_GRAVITY,false))
-
-            sensorGravity = MySensorClass(ctx,Sensor.TYPE_GRAVITY,{values ->
-                gravityData.v0 = values[0]
-                //gravityData.timestamp = timestamp
-            })
-        }
-        if(sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)!=null){
-            listOfSensors.add(Sensors(Sensor.STRING_TYPE_GYROSCOPE,false))
-
-            sensorGyroscope = MySensorClass(ctx,Sensor.TYPE_GYROSCOPE, { values->
-                gyroscopeData.v0 = values[0]
-                //gyroscopeData.timestamp = timestamp
-            })
-        }
-        if(sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)!=null){
-            listOfSensors.add(Sensors(Sensor.STRING_TYPE_ACCELEROMETER,false))
-
-        }
-        if(sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)!=null){
-            listOfSensors.add(Sensors(Sensor.STRING_TYPE_MAGNETIC_FIELD,false))
-
-            sensorMagnetic = MySensorClass(ctx,Sensor.TYPE_MAGNETIC_FIELD,{values ->
-                magneticData.v0 = values[0]
-                //magneticData.timestamp = timestamp
-            })
-        }
-
-        _sensorsUiState.update { currentState ->
-            currentState.copy(
-                listOfSensors = listOfSensors
-            )
-        }
-    }
 
 
     fun onCheckedUpdate(name: String,selected: Boolean){
@@ -258,18 +281,18 @@ class MeasurementViewModel : ViewModel() {
 //    }
 
     fun toAxis(){
-        val gravData: MutableList<Float> = mutableListOf()
+        val gravData: MutableList<List<Float>> = mutableListOf()
         val timeList: MutableList<Float> = mutableListOf()
-        val gyroData: MutableList<Float> = mutableListOf()
+        val gyroData: MutableList<List<Float>> = mutableListOf()
         for (value in collectedGravityData){
-            val v0Rounded = value.v0.toBigDecimal().setScale(3,RoundingMode.UP).toFloat()
-            gravData.add(v0Rounded)
-            val rounded = value.timeMark!!.toDouble(DurationUnit.SECONDS).toBigDecimal().setScale(3,RoundingMode.UP).toFloat()
+            //val v0Rounded = value.v0.toBigDecimal().setScale(4,RoundingMode.UP).toFloat()
+            gravData.add(value.values!!)
+            val rounded = value.timeMark!!.toDouble(DurationUnit.SECONDS).toBigDecimal().setScale(4,RoundingMode.UP).toFloat()
             timeList.add(rounded)
         }
-        for(value in collectedGyroscopeData){
-            gyroData.add(value.v0.toBigDecimal().setScale(3,RoundingMode.UP).toFloat())
-        }
+//        for(value in collectedGyroscopeData){
+//            //gyroData.add(value.values!!)
+//        }
         _resultUiState.update { currentState ->
             currentState.copy(
                 gravAxis = gravData,
@@ -280,7 +303,11 @@ class MeasurementViewModel : ViewModel() {
         viewModelScope.launch {
             if(selectedSensors.contains(Sensor.STRING_TYPE_GRAVITY)){
                 gravChartModel.runTransaction {
-                    lineSeries{ series(x=timeList.map{it},y=gravData.map{it}) }
+                    lineSeries{ series(x=timeList.map{it},y=gravData.map{it[0]})
+                        series(x=timeList.map{it},y=gravData.map{it[1]})
+                        series(x=timeList.map{it},y=gravData.map{it[2]})}
+//                    lineSeries { series(x=timeList.map{it},y=gravData.map{it[1]}) }
+//                    lineSeries { series(x=timeList.map{it},y=gravData.map{it[2]}) }
                 }
             }
             if(selectedSensors.contains(Sensor.STRING_TYPE_MAGNETIC_FIELD)){
@@ -288,11 +315,11 @@ class MeasurementViewModel : ViewModel() {
                     //lineSeries{ series(resultUiState.value.timeAxis,resultUiState.value.magnAxis) }
                 }
             }
-            if(selectedSensors.contains(Sensor.STRING_TYPE_GYROSCOPE)){
-                gyroChartProducer.runTransaction {
-                    lineSeries{ series(timeList,gyroData) }
-                }
-            }
+//            if(selectedSensors.contains(Sensor.STRING_TYPE_GYROSCOPE)){
+//                gyroChartProducer.runTransaction {
+//                    lineSeries{ series(timeList,gyroData) }
+//                }
+//            }
         }
     }
 
