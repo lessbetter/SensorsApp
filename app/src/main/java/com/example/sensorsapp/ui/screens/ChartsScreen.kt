@@ -1,21 +1,19 @@
 package com.example.sensorsapp.ui.screens
 
 import android.hardware.Sensor
+import android.util.Log
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.unit.dp
+import com.example.sensorsapp.ui.CreatingChartState
 import com.example.sensorsapp.ui.data.MeasurementViewModel
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
@@ -25,32 +23,41 @@ import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLa
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
-import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
 import com.patrykandpatrick.vico.compose.common.fill
 import com.patrykandpatrick.vico.core.cartesian.Scroll
 import com.patrykandpatrick.vico.core.cartesian.Zoom
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
-import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.common.component.TextComponent
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.math.RoundingMode
-import kotlin.time.DurationUnit
+
+@Composable
+fun ChartsScreen(
+    chartState: CreatingChartState,
+    viewModel: MeasurementViewModel,
+    modifier: Modifier
+){
+    when(chartState){
+        is CreatingChartState.Success -> ResultScreen(modifier,viewModel)
+        is CreatingChartState.Loading -> LoadingScreen(modifier.fillMaxSize())
+        is CreatingChartState.Error -> Unit
+    }
+}
 
 @Composable
 fun ResultScreen(
     modifier: Modifier,
     viewModel: MeasurementViewModel
 ){
+    Log.d("Loading: ","Enterred screen")
     val modelProducer = remember{CartesianChartModelProducer()}
     val resultUiState by viewModel.resultUiState.collectAsState()
 
-    val gravModel = viewModel.gravChartModel
-    val gyroModel = viewModel.gyroChartProducer
+    val gravModel = viewModel.gravChartModelProducer
+    val gyroModel = viewModel.gyroChartModelProducer
+    val magneModel = viewModel.magneChartModelProducer
+    val acceModel = viewModel.acceChartModelProducer
 
     val sensorsList = viewModel.selectedSensors
 
@@ -66,7 +73,7 @@ fun ResultScreen(
 //
 //    }
     Column (modifier = modifier.fillMaxSize()){
-        if(sensorsList.contains(Sensor.STRING_TYPE_GRAVITY)){
+        if(sensorsList.contains(Sensor.TYPE_GRAVITY)){
             CartesianChartHost(
                 rememberCartesianChart(
                     rememberLineCartesianLayer(
@@ -88,10 +95,17 @@ fun ResultScreen(
 
                 )
         }
-        if(sensorsList.contains(Sensor.STRING_TYPE_GYROSCOPE)){
+        if(sensorsList.contains(Sensor.TYPE_GYROSCOPE)){
             CartesianChartHost(
                 rememberCartesianChart(
-                    rememberLineCartesianLayer(),
+                    rememberLineCartesianLayer(
+                        lineProvider =
+                        LineCartesianLayer.LineProvider.series(
+                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Red))),
+                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Blue))),
+                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Green))),
+                        )
+                    ),
                     startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Tilt"),
                     bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
                     getXStep = { 0.5 }
@@ -102,14 +116,53 @@ fun ResultScreen(
 
                 )
         }
-//        for(value in viewModel.collectedGravityData){
-//            Row (Modifier.fillMaxWidth()){
-//                Text(value.v0.toString())
-//                val rounded = value.timeMark!!.toDouble(DurationUnit.SECONDS).toBigDecimal().setScale(4,
-//                    RoundingMode.UP).toFloat()
-//                Text(rounded.toString())
-//            }
-//        }
+        if(sensorsList.contains(Sensor.TYPE_MAGNETIC_FIELD)){
+            CartesianChartHost(
+                rememberCartesianChart(
+                    rememberLineCartesianLayer(
+                        lineProvider =
+                        LineCartesianLayer.LineProvider.series(
+                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Red))),
+                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Blue))),
+                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Green))),
+                        )
+                    ),
+                    startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Geomagnetic field strength"),
+                    bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
+                    getXStep = { 0.5 }
+                ),
+                gyroModel,
+                scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
+                zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0))
+
+            )
+        }
+        if(sensorsList.contains(Sensor.TYPE_ACCELEROMETER)){
+            CartesianChartHost(
+                rememberCartesianChart(
+                    rememberLineCartesianLayer(
+                        lineProvider =
+                        LineCartesianLayer.LineProvider.series(
+                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Red))),
+                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Blue))),
+                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Green))),
+                        )
+                    ),
+                    startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Acceleration"),
+                    bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
+                    getXStep = { 0.5 }
+                ),
+                gyroModel,
+                scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
+                zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0))
+
+            )
+        }
     }
 
+}
+
+@Composable
+fun LoadingScreen(modifier: Modifier){
+    Text("Loading")
 }

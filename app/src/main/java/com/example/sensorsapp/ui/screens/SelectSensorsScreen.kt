@@ -65,48 +65,63 @@ fun SelectSensorsScreen(
                     onCheckedChange = {checked = it}
                 )
             }
-            if(sensorsUiState.listOfSensors.contains(Sensors(Sensor.STRING_TYPE_GRAVITY))){
+            if(sensorsUiState.listOfSensors.contains(Sensors(Sensor.TYPE_GRAVITY))){
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ){
                     Text("Gravity sensor: ")
-                    val index = sensorsUiState.listOfSensors.indexOf(Sensors(Sensor.STRING_TYPE_GRAVITY))
+                    //val index = sensorsUiState.listOfSensors.indexOf(Sensors(Sensor.STRING_TYPE_GRAVITY))
                     Checkbox(
                         checked = gravityChecked,
                         onCheckedChange = {
-                            viewModel.onCheckedUpdate(Sensor.STRING_TYPE_GRAVITY,it)
+                            viewModel.onCheckedUpdate(Sensor.TYPE_GRAVITY,it)
                         }
                     )
                 }
             }
-            if(sensorsUiState.listOfSensors.contains(Sensors(Sensor.STRING_TYPE_MAGNETIC_FIELD))){
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ){
-                    Text("Magnetic field sensor: ")
-                    val index = sensorsUiState.listOfSensors.indexOf(Sensors(Sensor.STRING_TYPE_MAGNETIC_FIELD))
-                    Checkbox(
-                        checked = magneticChecked,
-                        onCheckedChange = {
-                            viewModel.onCheckedUpdate(Sensor.STRING_TYPE_MAGNETIC_FIELD,it)
-                        }
-                    )
-                }
-            }
-            if(sensorsUiState.listOfSensors.contains(Sensors(Sensor.STRING_TYPE_GYROSCOPE))){
+            if(sensorsUiState.listOfSensors.contains(Sensors(Sensor.TYPE_GYROSCOPE))){
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ){
                     Text("Gyroscope sensor: ")
-                    val index = sensorsUiState.listOfSensors.indexOf(Sensors(Sensor.STRING_TYPE_GYROSCOPE))
+                    //val index = sensorsUiState.listOfSensors.indexOf(Sensors(Sensor.STRING_TYPE_GYROSCOPE))
                     Checkbox(
                         checked = gyroscopeChecked,
                         onCheckedChange = {
-                            viewModel.onCheckedUpdate(Sensor.STRING_TYPE_GYROSCOPE,it)
+                            viewModel.onCheckedUpdate(Sensor.TYPE_GYROSCOPE,it)
                         }
                     )
                 }
             }
+            if(sensorsUiState.listOfSensors.contains(Sensors(Sensor.TYPE_MAGNETIC_FIELD))){
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    Text("Magnetic field sensor: ")
+                    //val index = sensorsUiState.listOfSensors.indexOf(Sensors(Sensor.STRING_TYPE_MAGNETIC_FIELD))
+                    Checkbox(
+                        checked = magneticChecked,
+                        onCheckedChange = {
+                            viewModel.onCheckedUpdate(Sensor.TYPE_MAGNETIC_FIELD,it)
+                        }
+                    )
+                }
+            }
+            if(sensorsUiState.listOfSensors.contains(Sensors(Sensor.TYPE_ACCELEROMETER))){
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    Text("Accelerometer sensor: ")
+                    //val index = sensorsUiState.listOfSensors.indexOf(Sensors(Sensor.STRING_TYPE_GYROSCOPE))
+                    Checkbox(
+                        checked = accelerometerChecked,
+                        onCheckedChange = {
+                            viewModel.onCheckedUpdate(Sensor.TYPE_ACCELEROMETER,it)
+                        }
+                    )
+                }
+            }
+
         }
 
         Button(

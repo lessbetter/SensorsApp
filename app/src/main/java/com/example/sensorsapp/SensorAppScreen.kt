@@ -2,7 +2,9 @@ package com.example.sensorsapp
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -11,12 +13,19 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.sensorsapp.ui.CreatingChartState
 import com.example.sensorsapp.ui.screens.MainScreen
 import com.example.sensorsapp.ui.data.MeasurementViewModel
 import com.example.sensorsapp.ui.data.StopWatch
+import com.example.sensorsapp.ui.screens.ChartsScreen
 import com.example.sensorsapp.ui.screens.MeasurementScreen
 import com.example.sensorsapp.ui.screens.ResultScreen
 import com.example.sensorsapp.ui.screens.SelectSensorsScreen
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 enum class SensorScreen(){
     Start,
@@ -34,6 +43,7 @@ fun SensorApp(
     navController: NavHostController = rememberNavController(),
 ){
     val ctx = (LocalContext.current)
+    val chartState = viewModel.creatingChartState
     //val stopWatch = remember{ StopWatch(viewModel)}
     ConstraintLayout(modifier = modifier.fillMaxSize()) {
         NavHost(
@@ -65,16 +75,20 @@ fun SensorApp(
                     modifier = modifier.fillMaxSize(),
                     viewModel,
                     onNextButtonClicked = {
-                        viewModel.toAxis()
-                        navController.navigate(SensorScreen.Result.name)
+                        runBlocking {
+                            viewModel.toAxis()
+                            navController.navigate(SensorScreen.Result.name)
+                        }
+
                     },
 
                 )
             }
             composable(route = SensorScreen.Result.name) {
-                ResultScreen(
+                ChartsScreen(
+                    chartState,
+                    viewModel,
                     modifier = modifier.fillMaxSize(),
-                    viewModel
                 )
             }
 
