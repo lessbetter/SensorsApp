@@ -76,6 +76,8 @@ class MeasurementViewModel : ViewModel() {
     var magneChartModelProducer: CartesianChartModelProducer = CartesianChartModelProducer()
     var acceChartModelProducer: CartesianChartModelProducer = CartesianChartModelProducer()
 
+    var collectedData: MeasurmentData = MeasurmentData()
+
 
     private var mSensor: Sensor? = null
 
@@ -308,7 +310,7 @@ class MeasurementViewModel : ViewModel() {
 //    }
 
     fun toAxis(){
-        creatingChartState = CreatingChartState.Loading
+        //creatingChartState = CreatingChartState.Loading
         val gravData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_GRAVITY)
         val gyroData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_GYROSCOPE)
         val magneData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_MAGNETIC_FIELD)
@@ -321,6 +323,7 @@ class MeasurementViewModel : ViewModel() {
             val rounded = value.timeMark!!.toDouble(DurationUnit.SECONDS).toBigDecimal().setScale(4,RoundingMode.UP).toFloat()
             timeList.add(rounded)
         }
+        collectedData.timeTable.addAll(timeList)
 //        for(value in collectedGyroscopeData){
 //            //gyroData.add(value.values!!)
 //        }
@@ -336,68 +339,79 @@ class MeasurementViewModel : ViewModel() {
 //        }finally {
 //
 //        }
-        viewModelScope.launch {
-            val defaultDispatcher = Dispatchers.Default
-            if(selectedSensors.contains(Sensor.TYPE_GRAVITY)){
-                withContext(defaultDispatcher){
-                    gravChartModelProducer.runTransaction {
-                        lineSeries{ series(x=timeList.map{it},y=gravData.map{it[0]})
-                            series(x=timeList.map{it},y=gravData.map{it[1]})
-                            series(x=timeList.map{it},y=gravData.map{it[2]})}
-//                    lineSeries { series(x=timeList.map{it},y=gravData.map{it[1]}) }
-//                    lineSeries { series(x=timeList.map{it},y=gravData.map{it[2]}) }
-                    }
-                   // delay(2000L)
+        val defaultDispatcher = Dispatchers.Default
+        viewModelScope.launch(defaultDispatcher) {
+            creatingChartState = CreatingChartState.Loading
+            viewModelScope.launch(defaultDispatcher) {
 
-                }
-            }
-            if(selectedSensors.contains(Sensor.TYPE_GYROSCOPE)){
-                withContext(defaultDispatcher){
-                    gyroChartModelProducer.runTransaction {
-                        lineSeries{
-                            series(timeList,gyroData.map{it[0]})
-                            series(timeList,gyroData.map{it[1]})
-                            series(timeList,gyroData.map{it[2]})
+                val job1=viewModelScope.launch(defaultDispatcher){
+                    if(selectedSensors.contains(Sensor.TYPE_GRAVITY)){
+                        gravChartModelProducer.runTransaction {
+                            lineSeries{
+                                series(x=timeList.map{it},y=gravData.map{it[0]})
+                                series(x=timeList.map{it},y=gravData.map{it[1]})
+                                series(x=timeList.map{it},y=gravData.map{it[2]})
+                            }
                         }
+                        delay(2000L)
                     }
-                   // delay(2000L)
 
                 }
-            }
-            if(selectedSensors.contains(Sensor.TYPE_MAGNETIC_FIELD)){
-                withContext(defaultDispatcher){
-                    magneChartModelProducer.runTransaction {
-                        lineSeries {
-                            series(timeList,magneData[0])
-                            series(timeList,magneData[1])
-                            series(timeList,magneData[2])
+
+                val job2=viewModelScope.launch(defaultDispatcher){
+                    if(selectedSensors.contains(Sensor.TYPE_GYROSCOPE)){
+                        gyroChartModelProducer.runTransaction {
+                            lineSeries{
+                                series(timeList,gyroData.map{it[0]})
+                                series(timeList,gyroData.map{it[1]})
+                                series(timeList,gyroData.map{it[2]})
+                            }
                         }
+                        delay(2000L)
                     }
-                    //delay(2000L)
-
                 }
-            }
-            if(selectedSensors.contains(Sensor.TYPE_ACCELEROMETER)){
-                withContext(defaultDispatcher){
-                    acceChartModelProducer.runTransaction {
-                        lineSeries {
-                            series(timeList,acceData[0])
-                            series(timeList,acceData[1])
-                            series(timeList,acceData[2])
+
+                val job3=viewModelScope.launch(defaultDispatcher){
+                    if(selectedSensors.contains(Sensor.TYPE_MAGNETIC_FIELD)){
+                        magneChartModelProducer.runTransaction {
+                            lineSeries {
+                                series(timeList,magneData.map{it[0]})
+                                series(timeList,magneData.map{it[1]})
+                                series(timeList,magneData.map{it[2]})
+                            }
                         }
-                        Log.d("creatingChart: ","finished")
+                        delay(2000L)
                     }
-                    //delay(2000L)
                 }
+                val job4=viewModelScope.launch(defaultDispatcher){
+                    if(selectedSensors.contains(Sensor.TYPE_ACCELEROMETER)){
+                        acceChartModelProducer.runTransaction {
+                            lineSeries {
+                                series(timeList,acceData.map{it[0]})
+                                series(timeList,acceData.map{it[1]})
+                                series(timeList,acceData.map{it[2]})
+                            }
+                            Log.d("creatingChart: ","finished")
+                        }
+                        delay(2000L)
+                    }
 
-            }
-            this.coroutineContext.job.invokeOnCompletion{
-                creatingChartState = CreatingChartState.Success
-            }
+                }
+                job1.join()
+                job2.join()
+                job3.join()
+                job4.join()
+                //delay(2000L)
+            }.join()
+            creatingChartState = CreatingChartState.Success
+            //this.coroutineContext.job.invokeOnCompletion{
+
+            //}
             Log.d("Loading: ","finished")
             //creatingChartState = CreatingChartState.Success
 
         }
+
 
 
     }
@@ -420,9 +434,11 @@ class MeasurementViewModel : ViewModel() {
 
     fun populateDataList(sensorType: Int): MutableList<List<Float>>{
         var listOfData: MutableList<List<Float>> = mutableListOf()
+        var sensorData: SensorData = SensorData()
         when(sensorType){
             Sensor.TYPE_GRAVITY ->{
                 if(selectedSensors.contains(sensorType)){
+                    sensorData.sensorType = sensorType
                     for (value in collectedGravityData){
                         listOfData.add(value.values!!)
                     }
@@ -430,6 +446,7 @@ class MeasurementViewModel : ViewModel() {
             }
             Sensor.TYPE_GYROSCOPE ->{
                 if(selectedSensors.contains(sensorType)){
+                    sensorData.sensorType = sensorType
                     for (value in collectedGyroscopeData){
                         listOfData.add(value.values!!)
                     }
@@ -437,6 +454,7 @@ class MeasurementViewModel : ViewModel() {
             }
             Sensor.TYPE_MAGNETIC_FIELD ->{
                 if(selectedSensors.contains(sensorType)){
+                    sensorData.sensorType = sensorType
                     for (value in collectedMagneticData){
                         listOfData.add(value.values!!)
                     }
@@ -444,11 +462,16 @@ class MeasurementViewModel : ViewModel() {
             }
             Sensor.TYPE_ACCELEROMETER ->{
                 if(selectedSensors.contains(sensorType)){
+                    sensorData.sensorType = sensorType
                     for (value in collectedAccelerometerData){
                         listOfData.add(value.values!!)
                     }
                 }
             }
+        }
+        sensorData.values.addAll(listOfData)
+        if(sensorData.sensorType!=-2){
+            collectedData.sensorsData.add(SensorData(sensorData.sensorType,sensorData.values))
         }
         return listOfData
     }

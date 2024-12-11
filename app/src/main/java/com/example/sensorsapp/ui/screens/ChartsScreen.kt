@@ -131,7 +131,7 @@ fun ResultScreen(
                     bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
                     getXStep = { 0.5 }
                 ),
-                gyroModel,
+                magneModel,
                 scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
                 zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0))
 
@@ -152,7 +152,7 @@ fun ResultScreen(
                     bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
                     getXStep = { 0.5 }
                 ),
-                gyroModel,
+                acceModel,
                 scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
                 zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0))
 

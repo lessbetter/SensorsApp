@@ -75,10 +75,10 @@ fun SensorApp(
                     modifier = modifier.fillMaxSize(),
                     viewModel,
                     onNextButtonClicked = {
-                        runBlocking {
+                        //runBlocking {
                             viewModel.toAxis()
                             navController.navigate(SensorScreen.Result.name)
-                        }
+                        //}
 
                     },
 
