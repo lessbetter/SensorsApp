@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -72,92 +73,98 @@ fun ResultScreen(
 //        }
 //
 //    }
-    Column (modifier = modifier.fillMaxSize()){
-        if(sensorsList.contains(Sensor.TYPE_GRAVITY)){
-            CartesianChartHost(
-                rememberCartesianChart(
-                    rememberLineCartesianLayer(
-                        lineProvider =
+    LazyColumn (modifier = modifier.fillMaxSize()){
+        item(){
+            if(sensorsList.contains(Sensor.TYPE_GRAVITY)){
+                CartesianChartHost(
+                    rememberCartesianChart(
+                        rememberLineCartesianLayer(
+                            lineProvider =
                             LineCartesianLayer.LineProvider.series(
                                 LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Red))),
                                 LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Blue))),
                                 LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Green))),
                             )
+                        ),
+                        startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Gravity"),
+                        bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
+                        getXStep = { 0.5 }
                     ),
-                    startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Gravity"),
-                    bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
-                    getXStep = { 0.5 }
-                ),
-                gravModel,
-                scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
-                zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0)),
-                modifier = Modifier.padding(top = 40.dp)
+                    gravModel,
+                    scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
+                    zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0)),
+                    modifier = Modifier.padding(top = 40.dp),
+                    placeholder = {Text("Loading")}
+                )
+            }
+            if(sensorsList.contains(Sensor.TYPE_GYROSCOPE)){
+                CartesianChartHost(
+                    rememberCartesianChart(
+                        rememberLineCartesianLayer(
+                            lineProvider =
+                            LineCartesianLayer.LineProvider.series(
+                                LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Red))),
+                                LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Blue))),
+                                LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Green))),
+                            )
+                        ),
+                        startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Tilt"),
+                        bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
+                        getXStep = { 0.5 }
+                    ),
+                    gyroModel,
+                    scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
+                    zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0)),
+                    placeholder = {Text("Loading")}
 
                 )
-        }
-        if(sensorsList.contains(Sensor.TYPE_GYROSCOPE)){
-            CartesianChartHost(
-                rememberCartesianChart(
-                    rememberLineCartesianLayer(
-                        lineProvider =
-                        LineCartesianLayer.LineProvider.series(
-                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Red))),
-                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Blue))),
-                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Green))),
-                        )
+            }
+            if(sensorsList.contains(Sensor.TYPE_MAGNETIC_FIELD)){
+                CartesianChartHost(
+                    rememberCartesianChart(
+                        rememberLineCartesianLayer(
+                            lineProvider =
+                            LineCartesianLayer.LineProvider.series(
+                                LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Red))),
+                                LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Blue))),
+                                LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Green))),
+                            )
+                        ),
+                        startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Geomagnetic field strength"),
+                        bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
+                        getXStep = { 0.5 }
                     ),
-                    startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Tilt"),
-                    bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
-                    getXStep = { 0.5 }
-                ),
-                gyroModel,
-                scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
-                zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0))
+                    magneModel,
+                    scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
+                    zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0)),
+                    placeholder = {Text("Loading")}
 
                 )
-        }
-        if(sensorsList.contains(Sensor.TYPE_MAGNETIC_FIELD)){
-            CartesianChartHost(
-                rememberCartesianChart(
-                    rememberLineCartesianLayer(
-                        lineProvider =
-                        LineCartesianLayer.LineProvider.series(
-                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Red))),
-                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Blue))),
-                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Green))),
-                        )
+            }
+            if(sensorsList.contains(Sensor.TYPE_ACCELEROMETER)){
+                CartesianChartHost(
+                    rememberCartesianChart(
+                        rememberLineCartesianLayer(
+                            lineProvider =
+                            LineCartesianLayer.LineProvider.series(
+                                LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Red))),
+                                LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Blue))),
+                                LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Green))),
+                            )
+                        ),
+                        startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Acceleration"),
+                        bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
+                        getXStep = { 0.5 }
                     ),
-                    startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Geomagnetic field strength"),
-                    bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
-                    getXStep = { 0.5 }
-                ),
-                magneModel,
-                scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
-                zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0))
+                    acceModel,
+                    scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
+                    zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0)),
+                    placeholder = {Text("Loading")}
 
-            )
+                )
+            }
         }
-        if(sensorsList.contains(Sensor.TYPE_ACCELEROMETER)){
-            CartesianChartHost(
-                rememberCartesianChart(
-                    rememberLineCartesianLayer(
-                        lineProvider =
-                        LineCartesianLayer.LineProvider.series(
-                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Red))),
-                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Blue))),
-                            LineCartesianLayer.rememberLine(fill = LineCartesianLayer.LineFill.single(fill(Color.Green))),
-                        )
-                    ),
-                    startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Acceleration"),
-                    bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
-                    getXStep = { 0.5 }
-                ),
-                acceModel,
-                scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
-                zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0))
 
-            )
-        }
     }
 
 }

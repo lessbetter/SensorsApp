@@ -24,11 +24,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.math.RoundingMode
-import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.TimeSource
@@ -76,7 +73,7 @@ class MeasurementViewModel : ViewModel() {
     var magneChartModelProducer: CartesianChartModelProducer = CartesianChartModelProducer()
     var acceChartModelProducer: CartesianChartModelProducer = CartesianChartModelProducer()
 
-    var collectedData: MeasurmentData = MeasurmentData()
+    var collectedData: MeasurementData = MeasurementData()
 
 
     private var mSensor: Sensor? = null
@@ -311,29 +308,29 @@ class MeasurementViewModel : ViewModel() {
 
     fun toAxis(){
         //creatingChartState = CreatingChartState.Loading
-        val gravData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_GRAVITY)
-        val gyroData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_GYROSCOPE)
-        val magneData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_MAGNETIC_FIELD)
-        val acceData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_ACCELEROMETER)
-        val timeList: MutableList<Float> = mutableListOf()
-
-        for (value in collectedGravityData){
-            //val v0Rounded = value.v0.toBigDecimal().setScale(4,RoundingMode.UP).toFloat()
-            //gravData.add(value.values!!)
-            val rounded = value.timeMark!!.toDouble(DurationUnit.SECONDS).toBigDecimal().setScale(4,RoundingMode.UP).toFloat()
-            timeList.add(rounded)
-        }
-        collectedData.timeTable.addAll(timeList)
+//        val gravData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_GRAVITY)
+//        val gyroData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_GYROSCOPE)
+//        val magneData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_MAGNETIC_FIELD)
+//        val acceData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_ACCELEROMETER)
+//        val timeList: MutableList<Float> = mutableListOf()
+//
+//        for (value in collectedGravityData){
+//            //val v0Rounded = value.v0.toBigDecimal().setScale(4,RoundingMode.UP).toFloat()
+//            //gravData.add(value.values!!)
+//            val rounded = value.timeMark!!.toDouble(DurationUnit.SECONDS).toBigDecimal().setScale(4,RoundingMode.UP).toFloat()
+//            timeList.add(rounded)
+//        }
+//        collectedData.timeTable.addAll(timeList)
 //        for(value in collectedGyroscopeData){
 //            //gyroData.add(value.values!!)
 //        }
-        _resultUiState.update { currentState ->
-            currentState.copy(
-                gravAxis = gravData,
-                gyroAxis = gyroData,
-                timeAxis = timeList,
-            )
-        }
+//        _resultUiState.update { currentState ->
+//            currentState.copy(
+//                gravAxis = gravData,
+//                gyroAxis = gyroData,
+//                timeAxis = timeList,
+//            )
+//        }
 //        creatingChartState = try{
 //
 //        }finally {
@@ -341,6 +338,20 @@ class MeasurementViewModel : ViewModel() {
 //        }
         val defaultDispatcher = Dispatchers.Default
         viewModelScope.launch(defaultDispatcher) {
+            collectedData = MeasurementData()
+            val gravData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_GRAVITY)
+            val gyroData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_GYROSCOPE)
+            val magneData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_MAGNETIC_FIELD)
+            val acceData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_ACCELEROMETER)
+            val timeList: MutableList<Float> = mutableListOf()
+
+            for (value in collectedGravityData){
+                //val v0Rounded = value.v0.toBigDecimal().setScale(4,RoundingMode.UP).toFloat()
+                //gravData.add(value.values!!)
+                val rounded = value.timeMark!!.toDouble(DurationUnit.SECONDS).toBigDecimal().setScale(4,RoundingMode.UP).toFloat()
+                timeList.add(rounded)
+            }
+            collectedData.timeTable.addAll(timeList)
             creatingChartState = CreatingChartState.Loading
             viewModelScope.launch(defaultDispatcher) {
 
@@ -405,7 +416,7 @@ class MeasurementViewModel : ViewModel() {
             }.join()
             creatingChartState = CreatingChartState.Success
             //this.coroutineContext.job.invokeOnCompletion{
-
+            stopRunning()
             //}
             Log.d("Loading: ","finished")
             //creatingChartState = CreatingChartState.Success

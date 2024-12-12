@@ -1,6 +1,6 @@
 package com.example.sensorsapp.ui.data
 
-data class MeasurmentData(
+data class MeasurementData(
     var sensorsData: MutableList<SensorData> = mutableListOf(),
     var timeTable: MutableList<Float> = mutableListOf(),
 )
