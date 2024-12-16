@@ -13,6 +13,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.sensorsapp.ui.AppViewModelProvider
 import com.example.sensorsapp.ui.CreatingChartState
 import com.example.sensorsapp.ui.screens.MainScreen
 import com.example.sensorsapp.ui.data.MeasurementViewModel
@@ -24,6 +25,7 @@ import com.example.sensorsapp.ui.screens.SelectSensorsScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
@@ -39,9 +41,10 @@ enum class SensorScreen(){
 @Composable
 fun SensorApp(
     modifier: Modifier = Modifier,
-    viewModel: MeasurementViewModel = viewModel(),
+    viewModel: MeasurementViewModel = viewModel(factory = AppViewModelProvider.Factory),
     navController: NavHostController = rememberNavController(),
 ){
+    val coroutineScope = rememberCoroutineScope()
     val ctx = (LocalContext.current)
     val chartState = viewModel.creatingChartState
     //val stopWatch = remember{ StopWatch(viewModel)}
@@ -77,6 +80,7 @@ fun SensorApp(
                     onNextButtonClicked = {
                         viewModel.toAxis()
                         navController.navigate(SensorScreen.Result.name)
+                        viewModel.saveTime()
                     },
 
                 )
@@ -86,6 +90,14 @@ fun SensorApp(
                     chartState,
                     viewModel,
                     modifier = modifier.fillMaxSize(),
+                    onSaveButtonClicked = {
+                        coroutineScope.launch{
+                            viewModel.saveData(it)
+                            //navController.navigate(SensorScreen.Start.name)
+                            navController.popBackStack(SensorScreen.Start.name,false)
+
+                        }
+                    }
                 )
             }
 

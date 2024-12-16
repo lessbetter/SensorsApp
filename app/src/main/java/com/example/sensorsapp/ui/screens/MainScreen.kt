@@ -31,8 +31,9 @@ import com.example.sensorsapp.ui.data.MeasurementViewModel
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
-    viewModel: MeasurementViewModel = viewModel(),
-    onNextButtonClicked: () -> Unit = {}
+    //viewModel: MeasurementViewModel = viewModel(),
+    onNextButtonClicked: () -> Unit = {},
+    onShowButtonClicked: () -> Unit = {},
 ){
     ConstraintLayout(modifier = modifier.fillMaxSize()) {
         val(startButton, welcomeText, settingsButton) = createRefs()

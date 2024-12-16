@@ -15,6 +15,10 @@ import com.example.sensorsapp.ui.CreatingChartState
 import com.example.sensorsapp.ui.MeasurementUiState
 import com.example.sensorsapp.ui.ResultUiState
 import com.example.sensorsapp.ui.SensorsUiState
+import com.example.sensorsapp.ui.room.ArchiveDatabase
+import com.example.sensorsapp.ui.room.Measurement
+import com.example.sensorsapp.ui.room.MeasurementsRepository
+import com.example.sensorsapp.ui.room.OfflineMeasurementsRepository
 import com.example.sensorsapp.ui.sensors.MySensorClass
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
@@ -26,12 +30,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.RoundingMode
+import java.time.LocalDateTime
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.TimeSource
 import kotlin.time.toDuration
 
-class MeasurementViewModel : ViewModel() {
+class MeasurementViewModel(private val measurementsRepository: MeasurementsRepository) : ViewModel() {
+
+    //private val measurementsRepository: MeasurementsRepository by lazy { OfflineMeasurementsRepository(ArchiveDatabase.getDatabase()) }
 
     var creatingChartState: CreatingChartState by mutableStateOf(CreatingChartState.Loading)
         private set
@@ -74,6 +81,8 @@ class MeasurementViewModel : ViewModel() {
     var acceChartModelProducer: CartesianChartModelProducer = CartesianChartModelProducer()
 
     var collectedData: MeasurementData = MeasurementData()
+
+    var timeOfMeasurement: String = ""
 
 
     private var mSensor: Sensor? = null
@@ -427,6 +436,10 @@ class MeasurementViewModel : ViewModel() {
 
     }
 
+    fun saveTime(){
+        timeOfMeasurement = LocalDateTime.now().toString()
+    }
+
     fun resetData(){
         _resultUiState.update { currentState ->
             currentState.copy(
@@ -485,6 +498,22 @@ class MeasurementViewModel : ViewModel() {
             collectedData.sensorsData.add(SensorData(sensorData.sensorType,sensorData.values))
         }
         return listOfData
+    }
+
+    private fun validateData(): Boolean {
+        var localList = collectedData.sensorsData
+        for(value in localList){
+            if(value.sensorType==-2){
+                localList.remove(value)
+            }
+        }
+        return localList.isNotEmpty()
+    }
+
+    suspend fun saveData(name: String){
+        if(validateData()){
+            measurementsRepository.insertMeasurement(Measurement(title = name, data = collectedData, date = timeOfMeasurement))
+        }
     }
 
 }

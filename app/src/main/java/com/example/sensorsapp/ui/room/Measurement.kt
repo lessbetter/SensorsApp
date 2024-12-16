@@ -1,7 +1,8 @@
-package com.example.sensorsapp.ui.data
+package com.example.sensorsapp.ui.room
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.example.sensorsapp.ui.data.MeasurementData
 
 @Entity(tableName = "measurements")
 data class Measurement(
