@@ -469,5 +469,13 @@ class MeasurementViewModel(private val measurementsRepository: MeasurementsRepos
         }
     }
 
+    fun updateDeleteConfirmation(value: Boolean){
+        _measurementUiState.update { currentState ->
+            currentState.copy(
+                deleteConfirmation = value
+            )
+        }
+    }
+
 }
 

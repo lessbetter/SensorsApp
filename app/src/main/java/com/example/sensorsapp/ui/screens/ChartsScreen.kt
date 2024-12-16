@@ -45,13 +45,23 @@ import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLa
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
+import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.patrykandpatrick.vico.compose.common.fill
+import com.patrykandpatrick.vico.compose.common.rememberHorizontalLegend
+import com.patrykandpatrick.vico.core.cartesian.CartesianDrawingContext
+import com.patrykandpatrick.vico.core.cartesian.CartesianMeasuringContext
 import com.patrykandpatrick.vico.core.cartesian.Scroll
 import com.patrykandpatrick.vico.core.cartesian.Zoom
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
+import com.patrykandpatrick.vico.core.common.Defaults
+import com.patrykandpatrick.vico.core.common.Dimensions
+import com.patrykandpatrick.vico.core.common.Fill
+import com.patrykandpatrick.vico.core.common.HorizontalLegend
+import com.patrykandpatrick.vico.core.common.LegendItem
+import com.patrykandpatrick.vico.core.common.component.ShapeComponent
 import com.patrykandpatrick.vico.core.common.component.TextComponent
 import kotlinx.coroutines.launch
 
@@ -177,7 +187,8 @@ fun ResultScreen(
                         ),
                         startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Gravity"),
                         bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
-                        getXStep = { 0.5 }
+                        getXStep = { 0.5 },
+                        legend = horizontalLegend()
                     ),
                     gravModel,
                     scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
@@ -203,7 +214,8 @@ fun ResultScreen(
                         ),
                         startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Tilt"),
                         bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
-                        getXStep = { 0.5 }
+                        getXStep = { 0.5 },
+                        legend = horizontalLegend()
                     ),
                     gyroModel,
                     scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
@@ -229,7 +241,8 @@ fun ResultScreen(
                         ),
                         startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Geomagnetic field strength"),
                         bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
-                        getXStep = { 0.5 }
+                        getXStep = { 0.5 },
+                        legend = horizontalLegend()
                     ),
                     magneModel,
                     scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
@@ -255,7 +268,8 @@ fun ResultScreen(
                         ),
                         startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Acceleration"),
                         bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
-                        getXStep = { 0.5 }
+                        getXStep = { 0.5 },
+                        legend = horizontalLegend()
                     ),
                     acceModel,
                     scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
@@ -275,12 +289,42 @@ fun ResultScreen(
 }
 
 @Composable
+private fun horizontalLegend(): HorizontalLegend<CartesianMeasuringContext, CartesianDrawingContext> =
+    rememberHorizontalLegend(
+        items = {
+            add(
+                element = LegendItem(
+                    icon = ShapeComponent(fill = fill(Color.Red)),
+                    labelComponent = TextComponent(),
+                    label = "X Axis"
+                )
+            )
+            add(
+                element = LegendItem(
+                    icon = ShapeComponent(fill = fill(Color.Blue)),
+                    labelComponent = TextComponent(),
+                    label = "Y Axis"
+                )
+            )
+            add(
+                element = LegendItem(
+                    icon = ShapeComponent(fill = fill(Color.Green)),
+                    labelComponent = TextComponent(),
+                    label = "Z Axis"
+                )
+            )
+        },
+        padding = Dimensions(startDp = 10f)
+    )
+
+@Composable
 fun LoadingScreen(modifier: Modifier){
     ConstraintLayout(modifier = modifier){
         val loader = createRef()
         CircularProgressIndicator(
-            modifier = Modifier.width(64.dp)
-                .constrainAs(loader){
+            modifier = Modifier
+                .width(64.dp)
+                .constrainAs(loader) {
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
                     start.linkTo(parent.start)
