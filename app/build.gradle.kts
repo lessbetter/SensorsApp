@@ -74,6 +74,8 @@ dependencies {
     implementation(libs.vico.core)
     implementation(libs.vico.views)
 
+    implementation(libs.gson)
+
     //Room
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)

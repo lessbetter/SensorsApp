@@ -1,41 +1,38 @@
 package com.example.sensorsapp
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.sensorsapp.ui.AppViewModelProvider
-import com.example.sensorsapp.ui.CreatingChartState
-import com.example.sensorsapp.ui.screens.MainScreen
 import com.example.sensorsapp.ui.data.MeasurementViewModel
-import com.example.sensorsapp.ui.data.StopWatch
 import com.example.sensorsapp.ui.screens.ChartsScreen
+import com.example.sensorsapp.ui.screens.MainScreen
 import com.example.sensorsapp.ui.screens.MeasurementScreen
-import com.example.sensorsapp.ui.screens.ResultScreen
+import com.example.sensorsapp.ui.screens.SavedDataScreen
 import com.example.sensorsapp.ui.screens.SelectSensorsScreen
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
+import com.example.sensorsapp.ui.screens.measurement.MeasurementDetailsDestination
+import com.example.sensorsapp.ui.screens.measurement.MeasurementDetailsScreen
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 
-enum class SensorScreen(){
+enum class SensorScreen {
     Start,
     Sensors,
     Measurement,
     Result,
-    Confirmation,
-    Settings
+//    Confirmation,
+//    Settings,
+    Show
 }
 
 @Composable
@@ -60,7 +57,8 @@ fun SensorApp(
                     onNextButtonClicked = {
                         viewModel.getSensors(ctx)
                         navController.navigate(SensorScreen.Sensors.name)
-                    }
+                    },
+                    onShowButtonClicked = { navController.navigate(SensorScreen.Show.name) }
                 )
             }
             composable(route = SensorScreen.Sensors.name) {
@@ -69,7 +67,13 @@ fun SensorApp(
                     viewModel,
                     onNextButtonClicked = {
                         viewModel.setLocalList()
-                        navController.navigate(SensorScreen.Measurement.name)
+                        if(viewModel.selectedSensors.isEmpty()){
+                            Toast.makeText(ctx,"You have to select at least one sensor!",Toast.LENGTH_SHORT).show()
+                        }else{
+                            viewModel.resetSelectedSensors()
+                            navController.navigate(SensorScreen.Measurement.name)
+                        }
+
                     }
                 )
             }
@@ -78,12 +82,19 @@ fun SensorApp(
                     modifier = modifier.fillMaxSize(),
                     viewModel,
                     onNextButtonClicked = {
-                        viewModel.toAxis()
-                        navController.navigate(SensorScreen.Result.name)
-                        viewModel.saveTime()
+                        if(!viewModel.hasStarted){
+                            Toast.makeText(ctx,"You haven't started yet",Toast.LENGTH_SHORT).show()
+
+                        }else{
+                            viewModel.toAxis()
+                            navController.navigate(SensorScreen.Result.name)
+                            viewModel.saveTime()
+                        }
+
                     },
 
                 )
+
             }
             composable(route = SensorScreen.Result.name) {
                 ChartsScreen(
@@ -98,6 +109,26 @@ fun SensorApp(
 
                         }
                     }
+                )
+            }
+            composable(route = SensorScreen.Show.name){
+                SavedDataScreen(
+                    navigateToEntry = {},
+                    navigateToUpdate = {navController.navigate("${MeasurementDetailsDestination.route}/${it}")},
+                )
+            }
+            composable(
+                route = MeasurementDetailsDestination.routeWithArgs,
+                arguments = listOf(navArgument(MeasurementDetailsDestination.itemIdArg) {
+                    type = NavType.IntType
+                })
+            ) {
+                MeasurementDetailsScreen(
+//                    navigateToEditItem =
+//                    {
+//                        navController.navigate("${ItemEditDestination.route}/$it")
+//                    },
+//                    navigateBack = { navController.navigateUp() }
                 )
             }
 

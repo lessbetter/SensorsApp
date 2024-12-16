@@ -2,10 +2,7 @@ package com.example.sensorsapp.ui.screens
 
 import android.hardware.Sensor
 import android.util.Log
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,7 +20,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -33,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -56,7 +53,6 @@ import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.common.component.TextComponent
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,7 +66,6 @@ fun ChartsScreen(
 ){
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
-    var showBottomSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -133,7 +128,7 @@ fun ChartsScreen(
 
 
                 }) {
-                    Text("Hide bottom sheet")
+                    Text("Save data")
                 }
             }
         }
@@ -148,8 +143,6 @@ fun ResultScreen(
     contentPadding: PaddingValues
 ){
     Log.d("Loading: ","Enterred screen")
-    val modelProducer = remember{CartesianChartModelProducer()}
-    val resultUiState by viewModel.resultUiState.collectAsState()
 
     val gravModel = viewModel.gravChartModelProducer
     val gyroModel = viewModel.gyroChartModelProducer
@@ -170,7 +163,7 @@ fun ResultScreen(
 //
 //    }
     LazyColumn (modifier = modifier.padding(contentPadding)){
-        item(){
+        item {
             if(sensorsList.contains(Sensor.TYPE_GRAVITY)){
                 CartesianChartHost(
                     rememberCartesianChart(

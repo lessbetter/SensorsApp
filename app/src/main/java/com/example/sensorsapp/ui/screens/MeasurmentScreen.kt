@@ -10,10 +10,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.example.sensorsapp.R
 import com.example.sensorsapp.ui.data.MeasurementViewModel
-import com.example.sensorsapp.ui.data.StopWatch
 
 @Composable
 fun MeasurementScreen(
@@ -21,36 +21,43 @@ fun MeasurementScreen(
     viewModel: MeasurementViewModel,
     onNextButtonClicked: () -> Unit = {},
     //stopwatch: StopWatch
-){
+) {
     val measurementUiState by viewModel.measurementUiState.collectAsState()
     val isRunning = measurementUiState.isRunning
     ConstraintLayout(modifier = modifier.fillMaxSize()) {
-        val(stoper,startPauseButton,stopButton,nextButton) = createRefs()
+        val (stoper, startPauseButton, stopButton, nextButton) = createRefs()
         val topGuideLine = createGuidelineFromTop(0.2f)
 
-        Text(text = measurementUiState.formattedTime,
-        modifier = Modifier.constrainAs(stoper){
-            top.linkTo(topGuideLine)
-            start.linkTo(parent.start, margin = 30.dp)
-        })
+        Text(
+            text = measurementUiState.formattedTime,
+            modifier = Modifier.constrainAs(stoper) {
+                top.linkTo(topGuideLine)
+                start.linkTo(parent.start, margin = 30.dp)
+            },
+            fontSize = 70.sp
+        )
         Button(
-            onClick = { viewModel.startMeasuring()
-                      //if(isRunning)stopwatch.pause() else stopwatch.start()
-                      },
-            modifier = Modifier.fillMaxWidth()
-                .constrainAs(startPauseButton){
+            onClick = {
+                viewModel.startMeasuring()
+                //if(isRunning)stopwatch.pause() else stopwatch.start()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .constrainAs(startPauseButton) {
                     bottom.linkTo(stopButton.top, margin = 30.dp)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                 }
         ) {
-            Text(if(isRunning) stringResource(R.string.pause) else stringResource(R.string.start))
+            Text(if (isRunning) stringResource(R.string.pause) else stringResource(R.string.start))
         }
-        Button(onClick = {viewModel.stopRunning()
-                         //stopwatch.reset()
-                         },
-            modifier = Modifier.fillMaxWidth()
-                .constrainAs(stopButton){
+        Button(onClick = {
+            viewModel.stopRunning()
+            //stopwatch.reset()
+        },
+            modifier = Modifier
+                .fillMaxWidth()
+                .constrainAs(stopButton) {
                     bottom.linkTo(nextButton.top, margin = 30.dp)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
@@ -58,11 +65,11 @@ fun MeasurementScreen(
             Text(stringResource(R.string.stop))
         }
         Button(onClick = onNextButtonClicked,
-            modifier = Modifier.constrainAs(nextButton){
+            modifier = Modifier.constrainAs(nextButton) {
                 bottom.linkTo(parent.bottom, margin = 60.dp)
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
-            }){
+            }) {
             Text(stringResource(R.string.next))
         }
     }

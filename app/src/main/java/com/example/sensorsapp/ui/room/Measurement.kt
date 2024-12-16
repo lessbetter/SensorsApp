@@ -11,5 +11,4 @@ data class Measurement(
     val title: String,
     val data: MeasurementData,
     val date: String
-) {
-}
+)
