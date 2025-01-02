@@ -57,9 +57,9 @@ import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.common.Defaults
-import com.patrykandpatrick.vico.core.common.Dimensions
 import com.patrykandpatrick.vico.core.common.Fill
 import com.patrykandpatrick.vico.core.common.HorizontalLegend
+import com.patrykandpatrick.vico.core.common.Insets
 import com.patrykandpatrick.vico.core.common.LegendItem
 import com.patrykandpatrick.vico.core.common.component.ShapeComponent
 import com.patrykandpatrick.vico.core.common.component.TextComponent
@@ -186,13 +186,13 @@ fun ResultScreen(
                             )
                         ),
                         startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Gravity"),
-                        bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
-                        getXStep = { 0.5 },
+                        bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time",labelRotationDegrees = 45f),
+                        //getXStep = { 0.5 },
                         legend = horizontalLegend()
                     ),
                     gravModel,
-                    scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
-                    zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0)),
+                    scrollState = rememberVicoScrollState(false),
+                    zoomState = rememberVicoZoomState(false,Zoom.Content),
                     modifier = Modifier.padding(top = 40.dp),
                     placeholder = {CircularProgressIndicator(
                         modifier = Modifier.width(64.dp),
@@ -314,7 +314,7 @@ private fun horizontalLegend(): HorizontalLegend<CartesianMeasuringContext, Cart
                 )
             )
         },
-        padding = Dimensions(startDp = 10f)
+        padding = Insets(startDp = 10f)
     )
 
 @Composable

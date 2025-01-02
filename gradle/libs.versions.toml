@@ -16,7 +16,7 @@ navigationRuntimeKtx = "2.8.4"
 roomCompiler = "2.6.1"
 roomKtx = "2.6.1"
 roomRuntime = "2.6.1"
-vico = "2.0.0-beta.3"
+vico = "2.0.0-beta.6"
 
 [libraries]
 androidx-constraintlayout-compose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "constraintlayoutCompose" }

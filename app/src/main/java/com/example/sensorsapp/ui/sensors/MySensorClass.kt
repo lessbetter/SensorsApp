@@ -12,7 +12,7 @@ class MySensorClass(
     private val context: Context,
 //    private val sensorFeature: String,
     private val sensorType: Int,
-    private val sendData: (List<Float>) -> Unit
+    private val sendData: (List<Float>,Long) -> Unit
 ) : SensorEventListener {
     private lateinit var mSensorManager: SensorManager
     private var mSensor: Sensor? = null
@@ -37,6 +37,6 @@ class MySensorClass(
 
     override fun onSensorChanged(event: SensorEvent) {
         //val value = event.values[0]
-        sendData(event.values.toList())
+        sendData(event.values.toList(),event.timestamp)
     }
 }

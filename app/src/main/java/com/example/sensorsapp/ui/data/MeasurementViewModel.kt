@@ -34,6 +34,11 @@ import kotlin.time.DurationUnit
 import kotlin.time.TimeSource
 import kotlin.time.toDuration
 
+data class TempSensorData(
+    var values: List<Float>,
+    var timestamp: Long
+)
+
 class MeasurementViewModel(private val measurementsRepository: MeasurementsRepository) : ViewModel() {
 
     var creatingChartState: CreatingChartState by mutableStateOf(CreatingChartState.Loading)
@@ -64,6 +69,8 @@ class MeasurementViewModel(private val measurementsRepository: MeasurementsRepos
     private var collectedGyroscopeData: MutableList<DataFromSensor> = mutableListOf()
     private var collectedMagneticData: MutableList<DataFromSensor> = mutableListOf()
     private var collectedAccelerometerData: MutableList<DataFromSensor> = mutableListOf()
+
+    private var tempCollectedGravity: MutableList<TempSensorData> = mutableListOf()
 
     var listOfSensors: MutableList<Sensors> = mutableListOf()
 
@@ -108,28 +115,29 @@ class MeasurementViewModel(private val measurementsRepository: MeasurementsRepos
             mSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
             listOfSensors.add(Sensors(sensorType = Sensor.TYPE_GRAVITY))
 
-            sensorGravity = MySensorClass(ctx,Sensor.TYPE_GRAVITY) { values ->
+            sensorGravity = MySensorClass(ctx,Sensor.TYPE_GRAVITY) { values,timestamp ->
                 gravityData.values = values
+                tempCollectedGravity.add(TempSensorData(values,timestamp))
             }
         }
         if(sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)!=null){
             listOfSensors.add(Sensors(sensorType = Sensor.TYPE_GYROSCOPE))
 
-            sensorGyroscope = MySensorClass(ctx,Sensor.TYPE_GYROSCOPE, { values->
+            sensorGyroscope = MySensorClass(ctx,Sensor.TYPE_GYROSCOPE, { values,timestamp->
                 gyroscopeData.values = values
             })
         }
         if(sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)!=null){
             listOfSensors.add(Sensors(sensorType = Sensor.TYPE_MAGNETIC_FIELD))
 
-            sensorMagnetic = MySensorClass(ctx,Sensor.TYPE_MAGNETIC_FIELD,{values ->
+            sensorMagnetic = MySensorClass(ctx,Sensor.TYPE_MAGNETIC_FIELD,{values,timestamp ->
                 magneticData.values = values
             })
         }
         if(sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)!=null){
             listOfSensors.add(Sensors(sensorType = Sensor.TYPE_ACCELEROMETER))
 
-            sensorAccelerometer = MySensorClass(ctx,Sensor.TYPE_ACCELEROMETER,{values ->
+            sensorAccelerometer = MySensorClass(ctx,Sensor.TYPE_ACCELEROMETER,{values,timestamp ->
                 accelerometerData.values = values
             })
         }
@@ -309,12 +317,20 @@ class MeasurementViewModel(private val measurementsRepository: MeasurementsRepos
                     if(selectedSensors.contains(Sensor.TYPE_GRAVITY)){
                         gravChartModelProducer.runTransaction {
                             lineSeries{
-                                series(x=timeList.map{it},y=gravData.map{it[0]})
-                                series(x=timeList.map{it},y=gravData.map{it[1]})
-                                series(x=timeList.map{it},y=gravData.map{it[2]})
+                                series(x=tempCollectedGravity.map { it.timestamp },y=tempCollectedGravity.map { it.values[0] })
+                                series(x=tempCollectedGravity.map { it.timestamp },y=tempCollectedGravity.map { it.values[1] })
+                                series(x=tempCollectedGravity.map { it.timestamp },y=tempCollectedGravity.map { it.values[2] })
                             }
                         }
                         delay(2000L)
+//                        gravChartModelProducer.runTransaction {
+//                            lineSeries{
+//                                series(x=timeList.map{it},y=gravData.map{it[0]})
+//                                series(x=timeList.map{it},y=gravData.map{it[1]})
+//                                series(x=timeList.map{it},y=gravData.map{it[2]})
+//                            }
+//                        }
+//                        delay(2000L)
                     }
 
                 }
