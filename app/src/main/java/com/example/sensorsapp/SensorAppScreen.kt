@@ -44,6 +44,7 @@ fun SensorApp(
     val coroutineScope = rememberCoroutineScope()
     val ctx = (LocalContext.current)
     val chartState = viewModel.creatingChartState
+    viewModel.getSensors(ctx)
     //val stopWatch = remember{ StopWatch(viewModel)}
     ConstraintLayout(modifier = modifier.fillMaxSize()) {
         NavHost(
@@ -55,7 +56,7 @@ fun SensorApp(
                 MainScreen(
                     modifier = modifier.fillMaxSize(),
                     onNextButtonClicked = {
-                        viewModel.getSensors(ctx)
+//                        viewModel.getSensors(ctx)
                         navController.navigate(SensorScreen.Sensors.name)
                     },
                     onShowButtonClicked = { navController.navigate(SensorScreen.Show.name) }

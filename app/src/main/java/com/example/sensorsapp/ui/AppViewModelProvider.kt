@@ -14,7 +14,7 @@ import com.example.sensorsapp.ui.screens.measurement.MeasurementDetailsViewModel
 object AppViewModelProvider {
     val Factory = viewModelFactory{
         initializer{
-            MeasurementViewModel(sensorApplication().container.measurementsRepository)
+            MeasurementViewModel(sensorApplication().container.measurementsRepository,sensorApplication().userPreferencesRepository)
         }
         initializer{
             SetNameViewModel()

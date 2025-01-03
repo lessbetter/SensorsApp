@@ -8,5 +8,6 @@ data class SensorsUiState(
     val isGyroscopeChecked: Boolean = false,
     val isMagneticChecked: Boolean = false,
     val isAccelerometerChecked: Boolean = false,
+    val isShowSelected: Boolean = false,
     //val isChecked: ((String) -> Boolean) = { false }
 )

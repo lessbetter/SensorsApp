@@ -23,8 +23,11 @@ import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.RoundingMode
@@ -39,7 +42,11 @@ data class TempSensorData(
     var timestamp: Long
 )
 
-class MeasurementViewModel(private val measurementsRepository: MeasurementsRepository) : ViewModel() {
+class MeasurementViewModel(
+    private val measurementsRepository: MeasurementsRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
+) : ViewModel() {
+    var listOfSensors: MutableList<Sensors> = mutableListOf()
 
     var creatingChartState: CreatingChartState by mutableStateOf(CreatingChartState.Loading)
         private set
@@ -51,7 +58,25 @@ class MeasurementViewModel(private val measurementsRepository: MeasurementsRepos
     val resultUiState: StateFlow<ResultUiState> = _resultUiState.asStateFlow()
 
     private val _sensorsUiState = MutableStateFlow(SensorsUiState())
-    val sensorsUiState: StateFlow<SensorsUiState> = _sensorsUiState.asStateFlow()
+    val sensorsUiState: StateFlow<SensorsUiState> =
+        userPreferencesRepository.userPreferencesFlow.map { preferences ->
+            SensorsUiState(isGravityChecked = preferences.isGravitySelected, isGyroscopeChecked = preferences.isGyroscopeSelected,
+                isMagneticChecked = preferences.isMagneticSelected,
+                isAccelerometerChecked = preferences.isAccelerometerSelected,
+                isShowSelected = preferences.isValuesShow)
+        }.stateIn(scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = SensorsUiState(listOfSensors = listOfSensors)
+        )
+//    val sensorsUiState: StateFlow<SensorsUiState> =
+//        userPreferencesRepository.isGravitySelected.map { isGravitySelected ->
+//            SensorsUiState(isGravityChecked = isGravitySelected)
+//        }
+//            .stateIn(
+//                scope = viewModelScope,
+//                started = SharingStarted.WhileSubscribed(5_000),
+//                initialValue = SensorsUiState()
+//            )
 
     private lateinit var sensorManager: SensorManager
 
@@ -72,7 +97,6 @@ class MeasurementViewModel(private val measurementsRepository: MeasurementsRepos
 
     private var tempCollectedGravity: MutableList<TempSensorData> = mutableListOf()
 
-    var listOfSensors: MutableList<Sensors> = mutableListOf()
 
     var selectedSensors: MutableList<Int> = mutableListOf()
 
@@ -118,6 +142,11 @@ class MeasurementViewModel(private val measurementsRepository: MeasurementsRepos
             sensorGravity = MySensorClass(ctx,Sensor.TYPE_GRAVITY) { values,timestamp ->
                 gravityData.values = values
                 tempCollectedGravity.add(TempSensorData(values,timestamp))
+                _measurementUiState.update { currentState ->
+                    currentState.copy(
+                        gravityValues = values
+                    )
+                }
             }
         }
         if(sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)!=null){
@@ -125,6 +154,11 @@ class MeasurementViewModel(private val measurementsRepository: MeasurementsRepos
 
             sensorGyroscope = MySensorClass(ctx,Sensor.TYPE_GYROSCOPE, { values,timestamp->
                 gyroscopeData.values = values
+                _measurementUiState.update { currentState ->
+                    currentState.copy(
+                        gyroscopeValues = values
+                    )
+                }
             })
         }
         if(sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)!=null){
@@ -132,6 +166,11 @@ class MeasurementViewModel(private val measurementsRepository: MeasurementsRepos
 
             sensorMagnetic = MySensorClass(ctx,Sensor.TYPE_MAGNETIC_FIELD,{values,timestamp ->
                 magneticData.values = values
+                _measurementUiState.update { currentState ->
+                    currentState.copy(
+                        magneticValues = values
+                    )
+                }
             })
         }
         if(sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)!=null){
@@ -139,6 +178,11 @@ class MeasurementViewModel(private val measurementsRepository: MeasurementsRepos
 
             sensorAccelerometer = MySensorClass(ctx,Sensor.TYPE_ACCELEROMETER,{values,timestamp ->
                 accelerometerData.values = values
+                _measurementUiState.update { currentState ->
+                    currentState.copy(
+                        accelerometerValues = values
+                    )
+                }
             })
         }
 
@@ -278,10 +322,30 @@ class MeasurementViewModel(private val measurementsRepository: MeasurementsRepos
     fun onCheckedUpdate(type: Int,selected: Boolean){
 //        var tempList = sensorsUiState.value.listOfSensors
         when(type){
-            Sensor.TYPE_GRAVITY -> _sensorsUiState.update { currentState -> currentState.copy(isGravityChecked = selected) }
-            Sensor.TYPE_GYROSCOPE -> _sensorsUiState.update { it.copy(isGyroscopeChecked = selected) }
-            Sensor.TYPE_MAGNETIC_FIELD -> _sensorsUiState.update { it.copy(isMagneticChecked = selected) }
-            Sensor.TYPE_ACCELEROMETER -> _sensorsUiState.update { it.copy(isAccelerometerChecked = selected) }
+            Sensor.TYPE_GRAVITY -> {
+                //_sensorsUiState.update { currentState -> currentState.copy(isGravityChecked = selected) }
+                viewModelScope.launch {
+                    userPreferencesRepository.saveGravityPreference(selected)
+                }
+            }
+            Sensor.TYPE_GYROSCOPE -> {
+                //_sensorsUiState.update { it.copy(isGyroscopeChecked = selected) }
+                viewModelScope.launch {
+                    userPreferencesRepository.saveGyroscopePreference(selected)
+                }
+            }
+            Sensor.TYPE_MAGNETIC_FIELD -> {
+                //_sensorsUiState.update { it.copy(isMagneticChecked = selected) }
+                viewModelScope.launch {
+                    userPreferencesRepository.saveMagneticPreference(selected)
+                }
+            }
+            Sensor.TYPE_ACCELEROMETER -> {
+                //_sensorsUiState.update { it.copy(isAccelerometerChecked = selected) }
+                viewModelScope.launch {
+                    userPreferencesRepository.saveAccelerometerPreference(selected)
+                }
+            }
         }
     }
 

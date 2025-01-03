@@ -56,7 +56,7 @@ fun SelectSensorsScreen(
 //                    onCheckedChange = {checked = it}
 //                )
 //            }
-            if (sensorsUiState.listOfSensors.contains(Sensors(Sensor.TYPE_GRAVITY))) {
+            if (viewModel.listOfSensors.contains(Sensors(Sensor.TYPE_GRAVITY))) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -70,7 +70,7 @@ fun SelectSensorsScreen(
                     )
                 }
             }
-            if (sensorsUiState.listOfSensors.contains(Sensors(Sensor.TYPE_GYROSCOPE))) {
+            if (viewModel.listOfSensors.contains(Sensors(Sensor.TYPE_GYROSCOPE))) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -84,7 +84,7 @@ fun SelectSensorsScreen(
                     )
                 }
             }
-            if (sensorsUiState.listOfSensors.contains(Sensors(Sensor.TYPE_MAGNETIC_FIELD))) {
+            if (viewModel.listOfSensors.contains(Sensors(Sensor.TYPE_MAGNETIC_FIELD))) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -98,7 +98,7 @@ fun SelectSensorsScreen(
                     )
                 }
             }
-            if (sensorsUiState.listOfSensors.contains(Sensors(Sensor.TYPE_ACCELEROMETER))) {
+            if (viewModel.listOfSensors.contains(Sensors(Sensor.TYPE_ACCELEROMETER))) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
