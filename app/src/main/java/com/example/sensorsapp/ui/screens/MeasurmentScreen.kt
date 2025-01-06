@@ -1,5 +1,6 @@
 package com.example.sensorsapp.ui.screens
 
+import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,6 +34,7 @@ import com.example.sensorsapp.R
 import com.example.sensorsapp.ui.AppViewModelProvider
 import com.example.sensorsapp.ui.data.MeasurementViewModel
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun MeasurementScreen(
     modifier: Modifier,
@@ -43,6 +45,7 @@ fun MeasurementScreen(
     val measurementUiState by viewModel.measurementUiState.collectAsState()
     val isRunning = measurementUiState.isRunning
     val deleteConfirmation = measurementUiState.deleteConfirmation
+    val sensorsUiState by viewModel.sensorsUiState.collectAsState()
     ConstraintLayout(modifier = modifier.fillMaxSize()) {
         val (stoper, startPauseButton, stopButton, nextButton,senValues) = createRefs()
         val topGuideLine = createGuidelineFromTop(0.2f)
@@ -55,6 +58,7 @@ fun MeasurementScreen(
             },
             fontSize = 70.sp
         )
+        if(sensorsUiState.isShowSelected)
         Column(
             modifier = Modifier.constrainAs(senValues) {
                 top.linkTo(stoper.bottom, margin = 20.dp)
@@ -63,6 +67,7 @@ fun MeasurementScreen(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
         ){
+            if(sensorsUiState.isGravityChecked)
             Row(
                 horizontalArrangement = Arrangement.Start,
                 modifier = Modifier.padding(vertical = 5.dp),
@@ -74,12 +79,13 @@ fun MeasurementScreen(
                     Row(
                         modifier = Modifier.fillMaxWidth()
                     ){
-                        Text("X Axis: ${measurementUiState.gravityValues[0]}",Modifier.weight(1f))
-                        Text("Y Axis: ${measurementUiState.gravityValues[1]}",Modifier.weight(1f))
-                        Text("Z Axis: ${measurementUiState.gravityValues[2]}",Modifier.weight(1f))
+                        Text(String.format("X Axis: %.4f",measurementUiState.gravityValues[0]),Modifier.weight(1f))
+                        Text(String.format("Y Axis: %.4f",measurementUiState.gravityValues[1]),Modifier.weight(1f))
+                        Text(String.format("Z Axis: %.4f",measurementUiState.gravityValues[2]),Modifier.weight(1f))
                     }
                 }
             }
+            if(sensorsUiState.isGyroscopeChecked)
             Row(
                 horizontalArrangement = Arrangement.Start,
                 modifier = Modifier.padding(vertical = 5.dp)
@@ -91,12 +97,13 @@ fun MeasurementScreen(
                     Row(
                         modifier = Modifier.fillMaxWidth()
                     ){
-                        Text("X Axis: ${measurementUiState.accelerometerValues[0]}",Modifier.weight(1f))
-                        Text("Y Axis: ${measurementUiState.accelerometerValues[1]}",Modifier.weight(1f))
-                        Text("Z Axis: ${measurementUiState.accelerometerValues[2]}",Modifier.weight(1f))
+                        Text(String.format("X Axis: %.4f",measurementUiState.gyroscopeValues[0]),Modifier.weight(1f))
+                        Text(String.format("Y Axis: %.4f",measurementUiState.gyroscopeValues[1]),Modifier.weight(1f))
+                        Text(String.format("Z Axis: %.4f",measurementUiState.gyroscopeValues[2]),Modifier.weight(1f))
                     }
                 }
             }
+            if(sensorsUiState.isMagneticChecked)
             Row(
                 horizontalArrangement = Arrangement.Start,
                 modifier = Modifier.padding(vertical = 5.dp)
@@ -108,12 +115,13 @@ fun MeasurementScreen(
                     Row(
                         modifier = Modifier.fillMaxWidth()
                     ){
-                        Text("X Axis: ${measurementUiState.magneticValues[0]}",Modifier.weight(1f))
-                        Text("Y Axis: ${measurementUiState.magneticValues[1]}",Modifier.weight(1f))
-                        Text("Z Axis: ${measurementUiState.magneticValues[2]}",Modifier.weight(1f))
+                        Text(String.format("X Axis: %.4f",measurementUiState.magneticValues[0]),Modifier.weight(1f))
+                        Text(String.format("Y Axis: %.4f",measurementUiState.magneticValues[1]),Modifier.weight(1f))
+                        Text(String.format("Z Axis: %.4f",measurementUiState.magneticValues[2]),Modifier.weight(1f))
                     }
                 }
             }
+            if(sensorsUiState.isAccelerometerChecked)
             Row(
                 horizontalArrangement = Arrangement.Start,
                 modifier = Modifier.padding(vertical = 5.dp)
@@ -125,9 +133,9 @@ fun MeasurementScreen(
                     Row(
                         modifier = Modifier.fillMaxWidth()
                     ){
-                        Text("X Axis: ${measurementUiState.accelerometerValues[0]}",Modifier.weight(1f))
-                        Text("Y Axis: ${measurementUiState.accelerometerValues[1]}",Modifier.weight(1f))
-                        Text("Z Axis: ${measurementUiState.accelerometerValues[2]}",Modifier.weight(1f))
+                        Text(String.format("X Axis: %.4f",measurementUiState.accelerometerValues[0]),Modifier.weight(1f))
+                        Text(String.format("Y Axis: %.4f",measurementUiState.accelerometerValues[1]),Modifier.weight(1f))
+                        Text(String.format("Z Axis: %.4f",measurementUiState.accelerometerValues[2]),Modifier.weight(1f))
                     }
                 }
             }

@@ -1,8 +1,12 @@
 package com.example.sensorsapp.ui.screens
 
 import android.hardware.Sensor
+import android.text.Layout
 import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,6 +32,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -42,12 +47,18 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
+import com.patrykandpatrick.vico.compose.common.component.fixed
+import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
+import com.patrykandpatrick.vico.compose.common.component.shadow
 import com.patrykandpatrick.vico.compose.common.fill
+import com.patrykandpatrick.vico.compose.common.insets
 import com.patrykandpatrick.vico.compose.common.rememberHorizontalLegend
+import com.patrykandpatrick.vico.compose.common.shape.markerCorneredShape
 import com.patrykandpatrick.vico.core.cartesian.CartesianDrawingContext
 import com.patrykandpatrick.vico.core.cartesian.CartesianMeasuringContext
 import com.patrykandpatrick.vico.core.cartesian.Scroll
@@ -56,6 +67,7 @@ import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
+import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
 import com.patrykandpatrick.vico.core.common.Defaults
 import com.patrykandpatrick.vico.core.common.Fill
 import com.patrykandpatrick.vico.core.common.HorizontalLegend
@@ -63,7 +75,13 @@ import com.patrykandpatrick.vico.core.common.Insets
 import com.patrykandpatrick.vico.core.common.LegendItem
 import com.patrykandpatrick.vico.core.common.component.ShapeComponent
 import com.patrykandpatrick.vico.core.common.component.TextComponent
+import com.patrykandpatrick.vico.core.common.shape.CorneredShape
 import kotlinx.coroutines.launch
+import java.text.DecimalFormat
+import java.time.Instant
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,11 +105,18 @@ fun ChartsScreen(
         },
         bottomBar = {
             BottomAppBar {
-                FloatingActionButton(
-                    onClick = { setNameViewModel.showBottomSheet() }
-                ) {
-                    Icon(Icons.Filled.Add,"Add data to database")
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ){
+                    FloatingActionButton(
+                        onClick = { setNameViewModel.showBottomSheet() }
+
+                    ) {
+                        Icon(Icons.Filled.Add,"Add data to database")
+                    }
                 }
+
             }
         }
     ) {
@@ -107,39 +132,50 @@ fun ChartsScreen(
                 onDismissRequest = {
                     setNameViewModel.resetState()
                 },
-                sheetState = sheetState
+                sheetState = sheetState,
             ) {
-                OutlinedTextField(
-                    value = setNameViewModel.name,
-                    onValueChange = { name -> setNameViewModel.updateName(name) },
-                    isError = setNameViewModel.isEmpty,
-                    label = {
-                        if(setNameViewModel.isEmpty){
-                            Text("Name cannot be empty")
-                        }else{
-                            Text("Set a name for this measurement")
-                        }
-                    }
-                    /*...*/
-                )
-                // Sheet content
-                Button(onClick = {
-                    if(setNameViewModel.name.isBlank()){
-                        setNameViewModel.setError(true)
-                    }else{
-                        setNameViewModel.setError(false)
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            if (!sheetState.isVisible) {
-                                setNameViewModel.resetState()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ){
+                    OutlinedTextField(
+                        value = setNameViewModel.name,
+                        onValueChange = { name -> setNameViewModel.updateName(name) },
+                        isError = setNameViewModel.isEmpty,
+                        label = {
+                            if(setNameViewModel.isEmpty){
+                                Text("Name cannot be empty")
+                            }else{
+                                Text("Set a name for this measurement")
                             }
-                            onSaveButtonClicked.invoke(setNameViewModel.name)
                         }
-                    }
-
-
-                }) {
-                    Text("Save data")
+                        /*...*/
+                    )
                 }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ){
+                    Button(onClick = {
+                        if(setNameViewModel.name.isBlank()){
+                            setNameViewModel.setError(true)
+                        }else{
+                            setNameViewModel.setError(false)
+                            scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                if (!sheetState.isVisible) {
+                                    setNameViewModel.resetState()
+                                }
+                                onSaveButtonClicked.invoke(setNameViewModel.name)
+                            }
+                        }
+
+
+                    }) {
+                        Text("Save data")
+                    }
+                }
+                // Sheet content
+
             }
         }
 
@@ -158,23 +194,31 @@ fun ResultScreen(
     val gyroModel = viewModel.gyroChartModelProducer
     val magneModel = viewModel.magneChartModelProducer
     val acceModel = viewModel.acceChartModelProducer
+    val formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS")
 
     val sensorsList = viewModel.selectedSensors
 
-//    LaunchedEffect(Unit){
-//        withContext(Dispatchers.Default){
-//            modelProducer.runTransaction {
-//                lineSeries{ series(resultUiState.timeAxis,resultUiState.gravAxis) }
-////                if(sensorsList.contains(Sensor.STRING_TYPE_GYROSCOPE)){
-////                    lineSeries { series(resultUiState.gyroAxis,resultUiState.gravAxis) }
-////                }
-//            }
-//        }
-//
-//    }
+    val labelBackgroundShape = markerCorneredShape(CorneredShape.Corner.Rounded)
+    val labelBackground =
+        rememberShapeComponent(
+            fill = fill(MaterialTheme.colorScheme.surfaceContainer),
+            shape = labelBackgroundShape,
+            shadow =
+            shadow(radius = 4f.dp, y = 2f.dp),
+        )
+    val label =
+        rememberTextComponent(
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlignment = Layout.Alignment.ALIGN_CENTER,
+            padding = insets(8.dp, 4.dp),
+            background = labelBackground,
+            minWidth = TextComponent.MinWidth.fixed(40.dp),
+        )
+
     LazyColumn (modifier = modifier.padding(contentPadding)){
         item {
             if(sensorsList.contains(Sensor.TYPE_GRAVITY)){
+                Log.d("Drawing: ","started")
                 CartesianChartHost(
                     rememberCartesianChart(
                         rememberLineCartesianLayer(
@@ -186,19 +230,26 @@ fun ResultScreen(
                             )
                         ),
                         startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Gravity"),
-                        bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time",labelRotationDegrees = 45f),
-                        //getXStep = { 0.5 },
-                        legend = horizontalLegend()
+                        bottomAxis =HorizontalAxis.rememberBottom(
+                            titleComponent = TextComponent(),
+                            title = "Time",
+                            valueFormatter = {_,value,_ ->
+                                LocalTime.ofInstant(Instant.ofEpochMilli(value.toLong()), ZoneId.systemDefault()).format(formatter)
+                            }),
+                        getXStep = { 500.0 },
+                        legend = horizontalLegend(),
+                        marker = DefaultCartesianMarker(label)
                     ),
                     gravModel,
-                    scrollState = rememberVicoScrollState(false),
-                    zoomState = rememberVicoZoomState(false,Zoom.Content),
-                    modifier = Modifier.padding(top = 40.dp),
+                    scrollState = rememberVicoScrollState(true),
+                    zoomState = rememberVicoZoomState(true),
+                    modifier = Modifier.padding(top = 40.dp, start = 16.dp, end = 16.dp),
                     placeholder = {CircularProgressIndicator(
                         modifier = Modifier.width(64.dp),
                         color = MaterialTheme.colorScheme.secondary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    )}
+                    )},
+
                 )
             }
             if(sensorsList.contains(Sensor.TYPE_GYROSCOPE)){
@@ -213,19 +264,25 @@ fun ResultScreen(
                             )
                         ),
                         startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Tilt"),
-                        bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
-                        getXStep = { 0.5 },
-                        legend = horizontalLegend()
+                        bottomAxis =HorizontalAxis.rememberBottom(
+                            titleComponent = TextComponent(),
+                            title = "Time",
+                            valueFormatter = {_,value,_ ->
+                                LocalTime.ofInstant(Instant.ofEpochMilli(value.toLong()), ZoneId.systemDefault()).format(formatter)
+                            }),
+                        getXStep = { 500.0 },
+                        legend = horizontalLegend(),
+                        marker = DefaultCartesianMarker(label)
                     ),
                     gyroModel,
                     scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
-                    zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0)),
+                    zoomState = rememberVicoZoomState(true),
                     placeholder = {CircularProgressIndicator(
                         modifier = Modifier.width(64.dp),
                         color = MaterialTheme.colorScheme.secondary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    )}
-
+                    )},
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
             if(sensorsList.contains(Sensor.TYPE_MAGNETIC_FIELD)){
@@ -240,19 +297,25 @@ fun ResultScreen(
                             )
                         ),
                         startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Geomagnetic field strength"),
-                        bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
-                        getXStep = { 0.5 },
-                        legend = horizontalLegend()
+                        bottomAxis =HorizontalAxis.rememberBottom(
+                            titleComponent = TextComponent(),
+                            title = "Time",
+                            valueFormatter = {_,value,_ ->
+                            LocalTime.ofInstant(Instant.ofEpochMilli(value.toLong()), ZoneId.systemDefault()).format(formatter)
+                        }),
+                        getXStep = { 500.0 },
+                        legend = horizontalLegend(),
+                        marker = DefaultCartesianMarker(label)
                     ),
                     magneModel,
                     scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
-                    zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0)),
+                    zoomState = rememberVicoZoomState(true),
                     placeholder = {CircularProgressIndicator(
                         modifier = Modifier.width(64.dp),
                         color = MaterialTheme.colorScheme.secondary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    )}
-
+                    )},
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
             if(sensorsList.contains(Sensor.TYPE_ACCELEROMETER)){
@@ -267,19 +330,25 @@ fun ResultScreen(
                             )
                         ),
                         startAxis = VerticalAxis.rememberStart(titleComponent = TextComponent(),title = "Acceleration"),
-                        bottomAxis =HorizontalAxis.rememberBottom(titleComponent = TextComponent(),title = "Time"),
-                        getXStep = { 0.5 },
-                        legend = horizontalLegend()
+                        bottomAxis =HorizontalAxis.rememberBottom(
+                            titleComponent = TextComponent(),
+                            title = "Time",
+                            valueFormatter = {_,value,_ ->
+                                LocalTime.ofInstant(Instant.ofEpochMilli(value.toLong()), ZoneId.systemDefault()).format(formatter)
+                            }),
+                        getXStep = { 500.0 },
+                        legend = horizontalLegend(),
+                        marker = DefaultCartesianMarker(label)
                     ),
                     acceModel,
                     scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
-                    zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0)),
+                    zoomState = rememberVicoZoomState(true),
                     placeholder = {CircularProgressIndicator(
                         modifier = Modifier.width(64.dp),
                         color = MaterialTheme.colorScheme.secondary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    )}
-
+                    )},
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
         }

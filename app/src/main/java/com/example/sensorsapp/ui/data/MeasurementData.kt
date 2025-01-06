@@ -8,5 +8,5 @@ data class MeasurementData(
 
 data class SensorData(
     var sensorType: Int = -2,
-    var values: MutableList<List<Float>> = mutableListOf(),
+    var values: MutableList<DataFromSensor> = mutableListOf(),
 )

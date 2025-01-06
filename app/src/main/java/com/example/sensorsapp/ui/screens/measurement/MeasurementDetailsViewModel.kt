@@ -8,7 +8,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sensorsapp.ui.CreatingChartState
+import com.example.sensorsapp.ui.data.DataFromSensor
 import com.example.sensorsapp.ui.data.MeasurementData
+import com.example.sensorsapp.ui.data.SensorData
 import com.example.sensorsapp.ui.room.Measurement
 import com.example.sensorsapp.ui.room.MeasurementsRepository
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
@@ -62,20 +64,20 @@ class MeasurementDetailsViewModel(
 
     fun toAxis(){
         val selectedSensors: MutableList<Int> = uiState.value.measurementDetails.data.listOfSensors
-        val gravData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_GRAVITY)
-        val gyroData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_GYROSCOPE)
-        val magneData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_MAGNETIC_FIELD)
-        val acceData: MutableList<List<Float>> = populateDataList(Sensor.TYPE_ACCELEROMETER)
-        val timeList: MutableList<Float> = uiState.value.measurementDetails.data.timeTable
+        val gravData: MutableList<DataFromSensor> = populateDataList(Sensor.TYPE_GRAVITY)
+        val gyroData: MutableList<DataFromSensor> = populateDataList(Sensor.TYPE_GYROSCOPE)
+        val magneData: MutableList<DataFromSensor> = populateDataList(Sensor.TYPE_MAGNETIC_FIELD)
+        val acceData: MutableList<DataFromSensor> = populateDataList(Sensor.TYPE_ACCELEROMETER)
+        //val timeList: MutableList<Float> = uiState.value.measurementDetails.data.timeTable
         val defaultDispatcher = Dispatchers.Default
         viewModelScope.launch (defaultDispatcher){
             val job1 = viewModelScope.launch(defaultDispatcher){
                 if(selectedSensors.contains(Sensor.TYPE_GRAVITY)){
                     gravChartModelProducer.runTransaction {
                         lineSeries{
-                            series(x=timeList.map{it},y=gravData.map{it[0]})
-                            series(x=timeList.map{it},y=gravData.map{it[1]})
-                            series(x=timeList.map{it},y=gravData.map{it[2]})
+                            series(x=gravData.map { it.timeStamp!! },y=gravData.map{ it.values!![0] })
+                            series(x=gravData.map { it.timeStamp!! },y=gravData.map{ it.values!![1] })
+                            series(x=gravData.map { it.timeStamp!! },y=gravData.map{ it.values!![2] })
                         }
                     }
                     delay(2000L)
@@ -85,9 +87,9 @@ class MeasurementDetailsViewModel(
                 if(selectedSensors.contains(Sensor.TYPE_GYROSCOPE)){
                     gyroChartModelProducer.runTransaction {
                         lineSeries{
-                            series(timeList,gyroData.map{it[0]})
-                            series(timeList,gyroData.map{it[1]})
-                            series(timeList,gyroData.map{it[2]})
+                            series(x=gyroData.map { it.timeStamp!! },y=gyroData.map{ it.values!![0] })
+                            series(x=gyroData.map { it.timeStamp!! },y=gyroData.map{ it.values!![1] })
+                            series(x=gyroData.map { it.timeStamp!! },y=gyroData.map{ it.values!![2] })
                         }
                     }
                     delay(2000L)
@@ -98,9 +100,9 @@ class MeasurementDetailsViewModel(
                 if(selectedSensors.contains(Sensor.TYPE_MAGNETIC_FIELD)){
                     magneChartModelProducer.runTransaction {
                         lineSeries {
-                            series(timeList,magneData.map{it[0]})
-                            series(timeList,magneData.map{it[1]})
-                            series(timeList,magneData.map{it[2]})
+                            series(x=magneData.map { it.timeStamp!! },y=magneData.map{ it.values!![0] })
+                            series(x=magneData.map { it.timeStamp!! },y=magneData.map{ it.values!![1] })
+                            series(x=magneData.map { it.timeStamp!! },y=magneData.map{ it.values!![2] })
                         }
                     }
                     delay(2000L)
@@ -110,9 +112,9 @@ class MeasurementDetailsViewModel(
                 if(selectedSensors.contains(Sensor.TYPE_ACCELEROMETER)){
                     acceChartModelProducer.runTransaction {
                         lineSeries {
-                            series(timeList,acceData.map{it[0]})
-                            series(timeList,acceData.map{it[1]})
-                            series(timeList,acceData.map{it[2]})
+                            series(x=acceData.map { it.timeStamp!! },y=acceData.map{ it.values!![0] })
+                            series(x=acceData.map { it.timeStamp!! },y=acceData.map{ it.values!![1] })
+                            series(x=acceData.map { it.timeStamp!! },y=acceData.map{ it.values!![2] })
                         }
 //                        Log.d("creatingChart: ","finished")
                     }
@@ -127,8 +129,8 @@ class MeasurementDetailsViewModel(
         creatingChartState = CreatingChartState.Success
     }
 
-    private fun populateDataList(sensorType: Int): MutableList<List<Float>> {
-        val listOfData: MutableList<List<Float>> = mutableListOf()
+    private fun populateDataList(sensorType: Int): MutableList<DataFromSensor> {
+        val listOfData: MutableList<DataFromSensor> = mutableListOf()
         when(sensorType){
             Sensor.TYPE_GRAVITY -> {
                 for(value in uiState.value.measurementDetails.data.sensorsData){

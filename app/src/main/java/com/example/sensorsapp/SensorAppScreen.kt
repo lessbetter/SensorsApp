@@ -87,6 +87,8 @@ fun SensorApp(
                             Toast.makeText(ctx,"You haven't started yet",Toast.LENGTH_SHORT).show()
 
                         }else{
+                            if(viewModel.isRunning)
+                                viewModel.startMeasuring()
                             viewModel.toAxis()
                             navController.navigate(SensorScreen.Result.name)
                             viewModel.saveTime()

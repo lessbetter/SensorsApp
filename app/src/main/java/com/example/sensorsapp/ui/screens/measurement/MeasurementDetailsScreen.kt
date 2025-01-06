@@ -1,7 +1,7 @@
 package com.example.sensorsapp.ui.screens.measurement
 
 import android.hardware.Sensor
-import android.util.Log
+import android.text.Layout
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -38,8 +38,14 @@ import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLa
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
+import com.patrykandpatrick.vico.compose.common.component.fixed
+import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
+import com.patrykandpatrick.vico.compose.common.component.shadow
 import com.patrykandpatrick.vico.compose.common.fill
+import com.patrykandpatrick.vico.compose.common.insets
 import com.patrykandpatrick.vico.compose.common.rememberHorizontalLegend
+import com.patrykandpatrick.vico.compose.common.shape.markerCorneredShape
 import com.patrykandpatrick.vico.core.cartesian.CartesianDrawingContext
 import com.patrykandpatrick.vico.core.cartesian.CartesianMeasuringContext
 import com.patrykandpatrick.vico.core.cartesian.Scroll
@@ -48,12 +54,17 @@ import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
+import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
 import com.patrykandpatrick.vico.core.common.HorizontalLegend
 import com.patrykandpatrick.vico.core.common.Insets
 import com.patrykandpatrick.vico.core.common.LegendItem
 import com.patrykandpatrick.vico.core.common.component.ShapeComponent
 import com.patrykandpatrick.vico.core.common.component.TextComponent
+import com.patrykandpatrick.vico.core.common.shape.CorneredShape
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 
@@ -159,8 +170,25 @@ fun ResultScreen(
     val gyroModel = viewModel.gyroChartModelProducer
     val magneModel = viewModel.magneChartModelProducer
     val acceModel = viewModel.acceChartModelProducer
+    val formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS")
 
     val sensorsList = uiState.measurementDetails.data.listOfSensors
+    val labelBackgroundShape = markerCorneredShape(CorneredShape.Corner.Rounded)
+    val labelBackground =
+        rememberShapeComponent(
+            fill = fill(MaterialTheme.colorScheme.surfaceContainer),
+            shape = labelBackgroundShape,
+            shadow =
+            shadow(radius = 4f.dp, y = 2f.dp),
+        )
+    val label =
+        rememberTextComponent(
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlignment = Layout.Alignment.ALIGN_CENTER,
+            padding = insets(8.dp, 4.dp),
+            background = labelBackground,
+            minWidth = TextComponent.MinWidth.fixed(40.dp),
+        )
 
     LazyColumn(modifier = modifier.padding(contentPadding)) {
         item {
@@ -193,15 +221,19 @@ fun ResultScreen(
                         ),
                         bottomAxis = HorizontalAxis.rememberBottom(
                             titleComponent = TextComponent(),
-                            title = "Time"
+                            title = "Time",
+                            valueFormatter = {_,value,_ ->
+                                LocalTime.ofInstant(Instant.ofEpochMilli(value.toLong()), ZoneId.systemDefault()).format(formatter)
+                            }
                         ),
-                        getXStep = { 0.5 },
-                        legend = horizontalLegend()
+                        getXStep = { 500.0 },
+                        legend = horizontalLegend(),
+                        marker = DefaultCartesianMarker(label)
                     ),
                     gravModel,
-                    scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
-                    zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0)),
-                    modifier = Modifier.padding(top = 40.dp),
+                    scrollState = rememberVicoScrollState(true),
+                    zoomState = rememberVicoZoomState(true),
+                    modifier = Modifier.padding(top = 40.dp, start = 16.dp, end = 16.dp),
                     placeholder = {
                         CircularProgressIndicator(
                             modifier = Modifier.width(64.dp),
@@ -240,21 +272,26 @@ fun ResultScreen(
                         ),
                         bottomAxis = HorizontalAxis.rememberBottom(
                             titleComponent = TextComponent(),
-                            title = "Time"
+                            title = "Time",
+                            valueFormatter = {_,value,_ ->
+                                LocalTime.ofInstant(Instant.ofEpochMilli(value.toLong()), ZoneId.systemDefault()).format(formatter)
+                            }
                         ),
-                        getXStep = { 0.5 },
-                        legend = horizontalLegend()
+                        getXStep = { 500.0 },
+                        legend = horizontalLegend(),
+                        marker = DefaultCartesianMarker(label)
                     ),
                     gyroModel,
-                    scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
-                    zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0)),
+                    scrollState = rememberVicoScrollState(true),
+                    zoomState = rememberVicoZoomState(true),
                     placeholder = {
                         CircularProgressIndicator(
                             modifier = Modifier.width(64.dp),
                             color = MaterialTheme.colorScheme.secondary,
                             trackColor = MaterialTheme.colorScheme.surfaceVariant,
                         )
-                    }
+                    },
+                    modifier = Modifier.padding(horizontal = 16.dp)
 
                 )
             }
@@ -287,21 +324,26 @@ fun ResultScreen(
                         ),
                         bottomAxis = HorizontalAxis.rememberBottom(
                             titleComponent = TextComponent(),
-                            title = "Time"
+                            title = "Time",
+                            valueFormatter = {_,value,_ ->
+                                LocalTime.ofInstant(Instant.ofEpochMilli(value.toLong()), ZoneId.systemDefault()).format(formatter)
+                            }
                         ),
-                        getXStep = { 0.5 },
-                        legend = horizontalLegend()
+                        getXStep = { 500.0 },
+                        legend = horizontalLegend(),
+                        marker = DefaultCartesianMarker(label)
                     ),
                     magneModel,
-                    scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
-                    zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0)),
+                    scrollState = rememberVicoScrollState(true),
+                    zoomState = rememberVicoZoomState(true),
                     placeholder = {
                         CircularProgressIndicator(
                             modifier = Modifier.width(64.dp),
                             color = MaterialTheme.colorScheme.secondary,
                             trackColor = MaterialTheme.colorScheme.surfaceVariant,
                         )
-                    }
+                    },
+                    modifier = Modifier.padding(horizontal = 16.dp)
 
                 )
             }
@@ -334,21 +376,26 @@ fun ResultScreen(
                         ),
                         bottomAxis = HorizontalAxis.rememberBottom(
                             titleComponent = TextComponent(),
-                            title = "Time"
+                            title = "Time",
+                            valueFormatter = {_,value,_ ->
+                                LocalTime.ofInstant(Instant.ofEpochMilli(value.toLong()), ZoneId.systemDefault()).format(formatter)
+                            }
                         ),
-                        getXStep = { 0.5 },
-                        legend = horizontalLegend()
+                        getXStep = { 500.0 },
+                        legend = horizontalLegend(),
+                        marker = DefaultCartesianMarker(label)
                     ),
                     acceModel,
-                    scrollState = rememberVicoScrollState(true, Scroll.Absolute.Start),
-                    zoomState = rememberVicoZoomState(false, initialZoom = Zoom.x(100.0)),
+                    scrollState = rememberVicoScrollState(true),
+                    zoomState = rememberVicoZoomState(true),
                     placeholder = {
                         CircularProgressIndicator(
                             modifier = Modifier.width(64.dp),
                             color = MaterialTheme.colorScheme.secondary,
                             trackColor = MaterialTheme.colorScheme.surfaceVariant,
                         )
-                    }
+                    },
+                    modifier = Modifier.padding(horizontal = 16.dp)
 
                 )
             }

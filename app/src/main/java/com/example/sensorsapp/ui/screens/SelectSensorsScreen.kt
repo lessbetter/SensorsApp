@@ -31,9 +31,10 @@ fun SelectSensorsScreen(
     val magneticChecked = sensorsUiState.isMagneticChecked
     val gyroscopeChecked = sensorsUiState.isGyroscopeChecked
     val accelerometerChecked = sensorsUiState.isAccelerometerChecked
+    val showChecked = sensorsUiState.isShowSelected
     ConstraintLayout(modifier = Modifier.fillMaxSize()) {
 
-        val (listText, sensorsColumn, nextButton) = createRefs()
+        val (listText, sensorsColumn, nextButton,showTick) = createRefs()
         val topGuideLine = createGuidelineFromTop(0.2f)
 
         Text(text = "Select sensors you want to use:",
@@ -115,6 +116,22 @@ fun SelectSensorsScreen(
 
         }
 
+        Row(
+            modifier = Modifier.constrainAs(showTick){
+            bottom.linkTo(nextButton.top, margin = 50.dp)
+            start.linkTo(parent.start, margin = 10.dp)
+            },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Show live sensor data: ")
+            Checkbox(
+                checked = showChecked,
+                onCheckedChange = {
+                    viewModel.showUpdate(it)
+                }
+            )
+        }
+
         Button(
             onClick = onNextButtonClicked,
 //            onClick = {
@@ -122,7 +139,7 @@ fun SelectSensorsScreen(
 ////                scope.launch { viewModel.readData() }
 //                      },
             modifier = Modifier.constrainAs(nextButton) {
-                bottom.linkTo(parent.bottom, margin = 40.dp)
+                bottom.linkTo(parent.bottom, margin = 50.dp)
                 end.linkTo(parent.end, margin = 30.dp)
             })
         {
