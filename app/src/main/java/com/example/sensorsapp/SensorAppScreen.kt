@@ -1,12 +1,19 @@
 package com.example.sensorsapp
 
+import android.Manifest.permission.MANAGE_EXTERNAL_STORAGE
+import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -23,6 +30,10 @@ import com.example.sensorsapp.ui.screens.SavedDataScreen
 import com.example.sensorsapp.ui.screens.SelectSensorsScreen
 import com.example.sensorsapp.ui.screens.measurement.MeasurementDetailsDestination
 import com.example.sensorsapp.ui.screens.measurement.MeasurementDetailsScreen
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 import kotlinx.coroutines.launch
 
 enum class SensorScreen {
@@ -34,7 +45,8 @@ enum class SensorScreen {
 //    Settings,
     Show
 }
-
+//@OptIn(ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SensorApp(
     modifier: Modifier = Modifier,
@@ -46,6 +58,33 @@ fun SensorApp(
     val chartState = viewModel.creatingChartState
     viewModel.getSensors(ctx)
     //val stopWatch = remember{ StopWatch(viewModel)}
+
+    val filePermissionState = rememberPermissionState(android.Manifest.permission.MANAGE_EXTERNAL_STORAGE)
+
+//    val requestPermissionLauncher =
+//        rememberLauncherForActivityResult(
+//            ActivityResultContracts.RequestPermission()
+//        ) { isGranted: Boolean ->
+//            if (isGranted) {
+//                // Permission is granted. Continue the action or workflow in your
+//                // app.
+//            } else {
+//                // Explain to the user that the feature is unavailable because the
+//                // feature requires a permission that the user has denied. At the
+//                // same time, respect the user's decision. Don't link to system
+//                // settings in an effort to convince the user to change their
+//                // decision.
+//            }
+//        }
+//
+//    LaunchedEffect(filePermissionState) {
+//        if (!filePermissionState.status.isGranted && filePermissionState.status.shouldShowRationale) {
+//            // Show rationale if needed
+//        } else {
+//            requestPermissionLauncher.launch(android.Manifest.permission.MANAGE_EXTERNAL_STORAGE)
+//        }
+//    }
+
     ConstraintLayout(modifier = modifier.fillMaxSize()) {
         NavHost(
             navController = navController,
@@ -56,10 +95,18 @@ fun SensorApp(
                 MainScreen(
                     modifier = modifier.fillMaxSize(),
                     onNextButtonClicked = {
+                        if(filePermissionState.status.isGranted){
+                            //filePermissionState.launchPermissionRequest()
+                            navController.navigate(SensorScreen.Sensors.name)
+                        }else{
+                            //filePermissionState.launchPermissionRequest()
+                            //navController.navigate(SensorScreen.Sensors.name)
+                        }
 //                        viewModel.getSensors(ctx)
-                        navController.navigate(SensorScreen.Sensors.name)
+                        //navController.navigate(SensorScreen.Sensors.name)
                     },
-                    onShowButtonClicked = { navController.navigate(SensorScreen.Show.name) }
+                    onShowButtonClicked = { navController.navigate(SensorScreen.Show.name) },
+                    //navController = navController
                 )
             }
             composable(route = SensorScreen.Sensors.name) {

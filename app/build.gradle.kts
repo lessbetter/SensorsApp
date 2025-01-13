@@ -68,6 +68,10 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.gson)
+    implementation(libs.jackson.module.kotlin)
+    implementation(libs.jackson.dataformat.csv)
+
+    implementation (libs.accompanist.permissions)
 
     implementation(libs.vico.compose)
     implementation(libs.vico.compose.m2)

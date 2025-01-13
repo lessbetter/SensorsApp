@@ -3,12 +3,17 @@ package com.example.sensorsapp.ui.data
 
 import android.content.Context
 import android.content.Context.SENSOR_SERVICE
+import android.content.Intent
 import android.hardware.Sensor
 import android.hardware.SensorManager
+import android.net.Uri
+import android.os.Environment
+import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sensorsapp.ui.CreatingChartState
@@ -18,6 +23,10 @@ import com.example.sensorsapp.ui.SensorsUiState
 import com.example.sensorsapp.ui.room.Measurement
 import com.example.sensorsapp.ui.room.MeasurementsRepository
 import com.example.sensorsapp.ui.sensors.MySensorClass
+import com.fasterxml.jackson.dataformat.csv.CsvMapper
+import com.fasterxml.jackson.module.kotlin.KotlinFeature
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.google.gson.Gson
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +39,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.FileWriter
 import java.math.RoundingMode
 import java.time.Instant
 import java.time.LocalDateTime
@@ -72,6 +82,10 @@ class MeasurementViewModel(
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = SensorsUiState(listOfSensors = listOfSensors)
         )
+    val csvMapper = CsvMapper().apply {
+        registerModule(KotlinModule.Builder().enable(KotlinFeature.StrictNullChecks)
+            .build())
+    }
 
     private lateinit var sensorManager: SensorManager
 
@@ -559,9 +573,40 @@ class MeasurementViewModel(
     suspend fun saveData(name: String){
         if(validateData()){
             collectedData.listOfSensors.addAll(selectedSensors)
+            var test: String = Gson().toJson(collectedData)
+            Log.d("Json test",test)
             measurementsRepository.insertMeasurement(Measurement(title = name, data = collectedData, date = timeOfMeasurement))
         }
     }
+
+    fun saveToFile(name: String){
+        if(Environment.isExternalStorageManager()){
+            //val uri = Uri.parse("package:${BuildConfig.APPLICATION_ID}")
+
+            if(validateData()){
+                collectedData.listOfSensors.addAll(selectedSensors)
+                var test: Collection<MeasurementData> = mutableListOf()
+                test.map { it }
+                //Log.d("Json test",test)
+                val fileName = "$name.csv"
+                writeCsvFile<MeasurementData>(test, fileName)
+            }
+
+            //startActivityForResult(Intent(ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:" + BuildConfig.APPLICATION_ID)),501)
+        }
+
+
+    }
+
+    private inline fun <reified T> writeCsvFile(data: Collection<T>, fileName: String) {
+        FileWriter(fileName).use { writer ->
+            csvMapper.writer(csvMapper.schemaFor(T::class.java).withHeader())
+                .writeValues(writer)
+                .writeAll(data)
+                .close()
+        }
+    }
+
 
     fun resetSelectedSensors(){
         _sensorsUiState.update { currentState ->

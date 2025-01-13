@@ -171,7 +171,24 @@ fun ChartsScreen(
 
 
                     }) {
-                        Text("Save data")
+                        Text("Save to database")
+                    }
+                    Button(onClick = {
+                        if(setNameViewModel.name.isBlank()){
+                            setNameViewModel.setError(true)
+                        }else{
+                            setNameViewModel.setError(false)
+                            scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                if (!sheetState.isVisible) {
+                                    setNameViewModel.resetState()
+                                }
+                                viewModel.saveToFile(setNameViewModel.name)
+                            }
+                        }
+
+
+                    }) {
+                        Text("Save to csv file")
                     }
                 }
                 // Sheet content
