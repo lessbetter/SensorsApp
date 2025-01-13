@@ -1,6 +1,9 @@
 package com.example.sensorsapp.ui.screens
 
+import android.content.Intent
 import android.hardware.Sensor
+import android.net.Uri
+import android.provider.DocumentsContract
 import android.text.Layout
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
@@ -35,8 +38,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.sensorsapp.ui.AppViewModelProvider
 import com.example.sensorsapp.ui.CreatingChartState
@@ -94,6 +99,7 @@ fun ChartsScreen(
 ){
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
+
 
     Scaffold(
         topBar = {
@@ -173,23 +179,23 @@ fun ChartsScreen(
                     }) {
                         Text("Save to database")
                     }
-                    Button(onClick = {
-                        if(setNameViewModel.name.isBlank()){
-                            setNameViewModel.setError(true)
-                        }else{
-                            setNameViewModel.setError(false)
-                            scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                if (!sheetState.isVisible) {
-                                    setNameViewModel.resetState()
-                                }
-                                viewModel.saveToFile(setNameViewModel.name)
-                            }
-                        }
-
-
-                    }) {
-                        Text("Save to csv file")
-                    }
+//                    Button(onClick = {
+//                        if(setNameViewModel.name.isBlank()){
+//                            setNameViewModel.setError(true)
+//                        }else{
+//                            setNameViewModel.setError(false)
+//                            scope.launch { sheetState.hide() }.invokeOnCompletion {
+//                                if (!sheetState.isVisible) {
+//                                    setNameViewModel.resetState()
+//                                }
+//                                viewModel.saveToFile(setNameViewModel.name)
+//                            }
+//                        }
+//
+//
+//                    }) {
+//                        Text("Save to csv file")
+//                    }
                 }
                 // Sheet content
 

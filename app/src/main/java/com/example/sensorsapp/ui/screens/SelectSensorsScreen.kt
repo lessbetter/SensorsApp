@@ -22,7 +22,7 @@ import com.example.sensorsapp.ui.data.Sensors
 fun SelectSensorsScreen(
     modifier: Modifier = Modifier,
     viewModel: MeasurementViewModel,
-    onNextButtonClicked: () -> Unit = {}
+    onNextButtonClicked: () -> Unit = {},
 ) {
 
     val sensorsUiState by viewModel.sensorsUiState.collectAsState()
@@ -32,8 +32,10 @@ fun SelectSensorsScreen(
     val gyroscopeChecked = sensorsUiState.isGyroscopeChecked
     val accelerometerChecked = sensorsUiState.isAccelerometerChecked
     val showChecked = sensorsUiState.isShowSelected
-    ConstraintLayout(modifier = Modifier.fillMaxSize()) {
 
+
+    ConstraintLayout(modifier = Modifier.fillMaxSize()) {
+        
         val (listText, sensorsColumn, nextButton,showTick) = createRefs()
         val topGuideLine = createGuidelineFromTop(0.2f)
 

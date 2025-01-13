@@ -45,8 +45,7 @@ enum class SensorScreen {
 //    Settings,
     Show
 }
-//@OptIn(ExperimentalPermissionsApi::class)
-@OptIn(ExperimentalPermissionsApi::class)
+
 @Composable
 fun SensorApp(
     modifier: Modifier = Modifier,
@@ -59,31 +58,7 @@ fun SensorApp(
     viewModel.getSensors(ctx)
     //val stopWatch = remember{ StopWatch(viewModel)}
 
-    val filePermissionState = rememberPermissionState(android.Manifest.permission.MANAGE_EXTERNAL_STORAGE)
 
-//    val requestPermissionLauncher =
-//        rememberLauncherForActivityResult(
-//            ActivityResultContracts.RequestPermission()
-//        ) { isGranted: Boolean ->
-//            if (isGranted) {
-//                // Permission is granted. Continue the action or workflow in your
-//                // app.
-//            } else {
-//                // Explain to the user that the feature is unavailable because the
-//                // feature requires a permission that the user has denied. At the
-//                // same time, respect the user's decision. Don't link to system
-//                // settings in an effort to convince the user to change their
-//                // decision.
-//            }
-//        }
-//
-//    LaunchedEffect(filePermissionState) {
-//        if (!filePermissionState.status.isGranted && filePermissionState.status.shouldShowRationale) {
-//            // Show rationale if needed
-//        } else {
-//            requestPermissionLauncher.launch(android.Manifest.permission.MANAGE_EXTERNAL_STORAGE)
-//        }
-//    }
 
     ConstraintLayout(modifier = modifier.fillMaxSize()) {
         NavHost(
@@ -95,15 +70,7 @@ fun SensorApp(
                 MainScreen(
                     modifier = modifier.fillMaxSize(),
                     onNextButtonClicked = {
-                        if(filePermissionState.status.isGranted){
-                            //filePermissionState.launchPermissionRequest()
-                            navController.navigate(SensorScreen.Sensors.name)
-                        }else{
-                            //filePermissionState.launchPermissionRequest()
-                            //navController.navigate(SensorScreen.Sensors.name)
-                        }
-//                        viewModel.getSensors(ctx)
-                        //navController.navigate(SensorScreen.Sensors.name)
+                        navController.navigate(SensorScreen.Sensors.name)
                     },
                     onShowButtonClicked = { navController.navigate(SensorScreen.Show.name) },
                     //navController = navController

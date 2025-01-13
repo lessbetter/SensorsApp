@@ -8,6 +8,7 @@ import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.net.Uri
 import android.os.Environment
+import android.provider.DocumentsContract
 import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -39,6 +40,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 import java.io.FileWriter
 import java.math.RoundingMode
 import java.time.Instant
@@ -579,33 +581,43 @@ class MeasurementViewModel(
         }
     }
 
-    fun saveToFile(name: String){
-        if(Environment.isExternalStorageManager()){
-            //val uri = Uri.parse("package:${BuildConfig.APPLICATION_ID}")
-
-            if(validateData()){
-                collectedData.listOfSensors.addAll(selectedSensors)
-                var test: Collection<MeasurementData> = mutableListOf()
-                test.map { it }
-                //Log.d("Json test",test)
-                val fileName = "$name.csv"
-                writeCsvFile<MeasurementData>(test, fileName)
-            }
-
-            //startActivityForResult(Intent(ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:" + BuildConfig.APPLICATION_ID)),501)
-        }
 
 
-    }
+//    fun saveToFile(name: String){
+//        //if(Environment.isExternalStorageManager()){
+//            //val uri = Uri.parse("package:${BuildConfig.APPLICATION_ID}")
+//
+//
+//            if(validateData()){
+//                collectedData.listOfSensors.addAll(selectedSensors)
+//                var test: Collection<MeasurementData> = mutableListOf()
+//                test.map { it }
+//                //Log.d("Json test",test)
+//                val fileName = "$name.csv"
+//                val file = File(fileName)
+//                val result = file.createNewFile()
+//                if (result) {
+//                    println("File created successfully: ${file.absolutePath}")
+//                } else {
+//                    println("File already exists.")
+//                }
+//                writeCsvFile<MeasurementData>(test, fileName)
+//            }
+//
+//            //startActivityForResult(Intent(ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:" + BuildConfig.APPLICATION_ID)),501)
+//        //}
+//
+//
+//    }
 
-    private inline fun <reified T> writeCsvFile(data: Collection<T>, fileName: String) {
-        FileWriter(fileName).use { writer ->
-            csvMapper.writer(csvMapper.schemaFor(T::class.java).withHeader())
-                .writeValues(writer)
-                .writeAll(data)
-                .close()
-        }
-    }
+//    private inline fun <reified T> writeCsvFile(data: Collection<T>, fileName: String) {
+//        FileWriter(fileName).use { writer ->
+//            csvMapper.writer(csvMapper.schemaFor(T::class.java).withHeader())
+//                .writeValues(writer)
+//                .writeAll(data)
+//                .close()
+//        }
+//    }
 
 
     fun resetSelectedSensors(){
